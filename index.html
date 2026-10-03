@@ -1,435 +1,326 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Stones Fantasy Draft 2026-2027</title>
-    <style>
-        :root {
-            --bg-dark: #0f172a;      /* Very dark navy */
-            --bg-panel: #1e293b;     /* Slightly lighter navy for panels */
-            --bg-input: #0f172a;     /* Input background */
-            --border-color: #334155; /* Muted border */
-            --text-main: #f8fafc;    /* White/gray text */
-            --text-muted: #94a3b8;   /* Muted gray for headers */
-            --accent: #0ea5e9;       /* Cyan/Blue accent */
-            --accent-hover: #0284c7;
-            --row-hover: #1e293b;
-            --danger: #ef4444;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden; /* Prevent full body scroll, handle inside panels */
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 20px;
-            background-color: var(--bg-dark);
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .logo-container h1 {
-            font-size: 20px;
-            font-weight: bold;
-            color: var(--text-main);
-            letter-spacing: 0.5px;
-        }
-        
-        .logo-container h1 span {
-            color: var(--accent);
-        }
-
-        .draft-info {
-            display: flex;
-            align-items: center;
-            gap: 30px;
-        }
-
-        .info-block {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .info-label {
-            font-size: 11px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 4px;
-        }
-
-        .info-value {
-            font-size: 16px;
-            font-weight: bold;
-            color: var(--accent);
-        }
-
-        .info-value.team-name {
-            color: var(--accent);
-        }
-        
-        .info-value.pick-number {
-            color: #fbbf24; /* Yellow for pick */
-        }
-
-        .btn-undo {
-            background-color: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-
-        .btn-undo:hover {
-            background-color: var(--border-color);
-        }
-
-        .main-layout {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-        }
-
-        .content-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid var(--border-color);
-            overflow: hidden;
-        }
-
-        .sidebar {
-            width: 350px;
-            background-color: var(--bg-dark);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .controls-bar {
-            display: flex;
-            align-items: center;
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--border-color);
-            gap: 20px;
-        }
-
-        .search-container {
-            flex: 1;
-            max-width: 300px;
-        }
-
-        .search-input {
-            width: 100%;
-            background-color: var(--bg-input);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: 10px 15px;
-            border-radius: 4px;
-            outline: none;
-            font-size: 14px;
-        }
-        
-        .search-input:focus {
-            border-color: var(--accent);
-        }
-
-        .filters {
-            display: flex;
-            gap: 8px;
-        }
-
-        .filter-btn {
-            background-color: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-muted);
-            padding: 6px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-
-        .filter-btn:hover {
-            border-color: var(--text-muted);
-            color: var(--text-main);
-        }
-
-        .filter-btn.active {
-            background-color: var(--accent);
-            border-color: var(--accent);
-            color: white;
-        }
-
-        .checkbox-container {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            color: var(--text-muted);
-            cursor: pointer;
-        }
-
-        .table-container {
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-        }
-
-        th {
-            position: sticky;
-            top: 0;
-            background-color: var(--bg-dark);
-            color: var(--text-muted);
-            font-size: 11px;
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border-color);
-            white-space: nowrap;
-        }
-
-        td {
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border-color);
-            font-size: 13px;
-            white-space: nowrap;
-        }
-
-        tr:hover td {
-            background-color: var(--row-hover);
-        }
-
-        .col-player {
-            font-weight: 600;
-            color: var(--text-main);
-        }
-
-        .col-pos, .col-team {
-            color: var(--text-muted);
-        }
-
-        .btn-action {
-            background-color: var(--bg-panel);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: 4px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        
-        .btn-action:hover {
-            background-color: var(--accent);
-            border-color: var(--accent);
-        }
-
-        .sidebar-header {
-            padding: 20px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .sidebar-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 4px;
-        }
-
-        .sidebar-subtitle {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-        
-        .empty-sidebar-state {
-            padding: 20px;
-            color: var(--text-muted);
-            font-size: 13px;
-            text-align: center;
-            margin-top: 50px;
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Stones Fantasy Draft Board</title>
+<style>
+:root{--bg:#12151b;--panel:#1b2029;--line:#2b3340;--text:#e8ecf2;--mut:#8b95a5;--acc:#ff9f1c;--good:#4cc9a0;--bad:#ef6461}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 Bahnschrift,"Segoe UI",system-ui,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5}
+h1{margin:0;font-size:20px;letter-spacing:.3px}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+button,select,input{font:inherit;color:var(--text);background:#232a36;border:1px solid var(--line);border-radius:6px;padding:7px 12px}
+button{cursor:pointer}button:hover:not(:disabled){border-color:var(--acc)}button:disabled{opacity:.4;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+nav button.on{background:var(--acc);color:#1a1200;border-color:var(--acc);font-weight:700}
+.reset{background:var(--bad);border-color:var(--bad);color:#fff;font-weight:700}
+main{padding:20px;max-width:1400px;margin:0 auto}
+.clock{display:flex;flex-wrap:wrap;gap:20px;align-items:center;background:var(--panel);border:1px solid var(--line);border-left:6px solid var(--acc);border-radius:8px;padding:16px 20px;margin-bottom:16px}
+.clock .big{font-size:30px;font-weight:700;color:var(--acc)}
+.mut{color:var(--mut)}
+.next{display:flex;gap:8px;flex-wrap:wrap}
+.chip{background:#232a36;border:1px solid var(--line);border-radius:20px;padding:3px 10px;font-size:12px}
+.tools{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.tools input{min-width:240px}
+.wrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;background:var(--panel)}
+th,td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child,th.l,td.l{text-align:left}
+th{color:var(--mut);font-weight:600;position:sticky;top:0;background:var(--panel)}
+tr:hover td{background:#212836}
+.pos{color:var(--mut);font-size:12px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;margin-bottom:16px}
+.punt{border:2px solid var(--acc);background:#2a2113;border-radius:8px;padding:14px 18px;margin:16px 0;font-size:16px}
+.punt b{color:var(--acc)}
+.cats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin:12px 0}
+.cat{background:#232a36;border-radius:6px;padding:8px 10px;border-bottom:3px solid var(--line)}
+.cat .v{font-size:20px;font-weight:700}.cat.lo{border-color:var(--bad)}.cat.hi{border-color:var(--good)}
+.row{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.row input{flex:1;max-width:320px}.row .n{width:90px;color:var(--mut)}
+.grid th,.grid td{text-align:left;white-space:normal;min-width:118px;vertical-align:top;font-size:12px}
+.grid td.cur{outline:2px solid var(--acc);outline-offset:-2px}
+.grid td .pk{color:var(--mut);font-size:11px}
+.grid td.filled{background:#1f2a33}
+.grid .snake{color:var(--mut);font-size:11px;font-weight:400}
+@media (prefers-reduced-motion:no-preference){.clock .big{transition:color .2s}}
+</style>
 </head>
 <body>
-    <header class="header">
-        <div class="logo-container">
-            <h1>THE STONES <span>FANTASY DRAFT 2026-2027</span></h1>
-        </div>
-        
-        <div class="draft-info">
-            <div class="info-block">
-                <span class="info-label">On The Clock</span>
-                <span class="info-value team-name">Team 1</span>
-            </div>
-            
-            <div class="info-block">
-                <span class="info-label">Round / Pick</span>
-                <span class="info-value pick-number">1.01</span>
-            </div>
-            
-            <button class="btn-undo">Undo</button>
-        </div>
-    </header>
+<header>
+  <h1>NBA Fantasy Draft Board</h1>
+  <nav id="nav"></nav>
+  <button class="reset" id="reset">Reset Draft</button>
+</header>
+<main id="app"></main>
 
-    <div class="main-layout">
-        <main class="content-area">
-            <div class="controls-bar">
-                <div class="search-container">
-                    <input type="text" id="searchInput" class="search-input" placeholder="Search players...">
-                </div>
-                
-                <div class="filters" id="positionFilters">
-                    <button class="filter-btn active" data-pos="ALL">ALL</button>
-                    <button class="filter-btn" data-pos="PG">PG</button>
-                    <button class="filter-btn" data-pos="SG">SG</button>
-                    <button class="filter-btn" data-pos="SF">SF</button>
-                    <button class="filter-btn" data-pos="PF">PF</button>
-                    <button class="filter-btn" data-pos="C">C</button>
-                </div>
-                
-                <label class="checkbox-container">
-                    <input type="checkbox" id="hideDrafted"> Hide Drafted
-                </label>
-            </div>
+<script>
+// Name|Team|Pos|PTS,REB,AST,STL,BLK,3PM,FG(x1000),FT(x1000),TO  -- listed in rough draft-rank order
+const RAW=`Nikola Jokic|DEN|C|26.1,12.3,9,1.4,.9,1.1,565,820,3
+Victor Wembanyama|SAS|C|26.3,12.2,3.5,1.1,3.5,2.2,502,823,2.9
+Shai Gilgeous-Alexander|OKC|G|31,5.6,6.1,2,.8,1.3,540,870,2.2
+Luka Doncic|LAL|G|28.8,8.2,7.3,1.4,.5,3.8,485,780,3.8
+Cade Cunningham|DET|G|24.7,4.5,9.2,1.1,.4,2.1,455,860,3.9
+Giannis Antetokounmpo|MIA|F/C|29,11.5,5.8,1.2,1,.5,610,650,3.4
+Tyrese Maxey|PHI|G|26,3.5,6.2,1,.3,3.1,465,890,2.1
+Anthony Edwards|MIN|G|27,5.5,4.5,1.3,.7,3.4,462,800,3
+Jalen Brunson|NYK|G|26.5,3.2,6.5,.9,.2,2.6,470,840,2.4
+Kevin Durant|HOU|F|26.5,6,4.2,.9,1.1,2.3,520,880,3.1
+Donovan Mitchell|CLE|G|26.5,4.5,5.5,1.5,.4,3.3,465,860,2.6
+Jayson Tatum|BOS|F|25.5,8.5,5.5,1,.6,3,455,830,2.7
+Devin Booker|PHX|G|25.5,4,6.5,.9,.3,2.8,475,880,3
+LeBron James|LAL|F|22.5,7,7.5,1.1,.5,2,520,760,3.4
+Stephen Curry|GSW|G|25,4.5,6,1.1,.4,4.3,458,925,3
+Anthony Davis|DAL|F/C|22,10.5,3,1.2,2.2,.6,540,780,2
+Domantas Sabonis|SAC|C|18,12.5,6,.9,.5,1,580,750,3.2
+Alperen Sengun|HOU|C|20.5,9.5,5.8,1.1,.9,.9,525,720,2.9
+Paolo Banchero|ORL|F|24,7.5,5,.9,.6,1.5,470,730,3
+Jalen Johnson|ATL|F|21,10.5,7.5,1.3,.8,1.5,500,740,2.7
+Scottie Barnes|TOR|F|19,8,6,1.3,1.3,1.4,490,780,2.5
+Evan Mobley|CLE|F/C|18.5,9.5,3.2,1,1.5,1.2,545,720,2
+Jalen Williams|OKC|F|21,5.5,5,1.5,.7,2,505,820,2
+Chet Holmgren|OKC|C|17.5,8,2.5,.9,2.1,1.9,520,800,1.6
+Cooper Flagg|DAL|F|18.5,6.5,3.8,1.2,1,1.3,460,790,2.6
+Amen Thompson|HOU|G/F|15,8,4.5,1.6,1.1,.5,540,610,2.1
+Austin Reaves|LAL|G|20,4.5,6,.9,.3,2.5,490,880,2.6
+Walker Kessler|UTA|C|11.5,9.5,2,.7,2.5,0,640,640,1.3
+Karl-Anthony Towns|NYK|C|23,11.5,3.2,.9,.7,2.1,505,870,2.6
+Bam Adebayo|MIA|C|17.5,10,4.2,1.2,.9,1.2,520,780,2.5
+Joel Embiid|PHI|C|26,7.5,4.2,.9,1,1.3,480,850,3
+Zion Williamson|NOP|F|23,6,4.5,1.1,.7,.2,580,700,3
+Trae Young|WAS|G|23,3.2,10.5,1.2,.2,2.8,430,860,4.3
+Kawhi Leonard|LAC|F|24,6,3.5,1.6,.5,2.4,480,880,2.2
+James Harden|LAC|G|21,5,8,1.2,.6,3,435,880,3.3
+Damian Lillard|POR|G|21,4,6.5,1,.3,3,440,910,2.6
+Jaylen Brown|BOS|G/F|26,6,4.5,1.1,.4,2.2,490,740,3
+LaMelo Ball|CHA|G|24,5.5,7.5,1.5,.3,3.5,420,820,3.8
+Franz Wagner|ORL|F|21,5.5,4.5,1.1,.4,1.7,470,830,2.5
+Desmond Bane|ORL|G|19.5,4.5,4.5,1,.4,3,470,880,2.2
+Jaren Jackson Jr.|MEM|F/C|20,5.5,2,1,1.4,2.2,470,790,2.2
+Ja Morant|MEM|G|20,4,8,1,.3,1.7,450,780,3.2
+De'Aaron Fox|SAS|G|19,3.8,6,1.4,.3,2,480,770,2.7
+Jamal Murray|DEN|G|20.5,4,6,1,.3,2.6,470,860,2.3
+Pascal Siakam|IND|F|21,7,4.2,.9,.4,1.6,510,780,2.3
+Tyrese Haliburton|IND|G|18.5,3.5,9,1.2,.5,3,470,850,2.3
+Darius Garland|LAC|G|19,2.8,6.5,1,.1,2.7,455,880,2.7
+Dyson Daniels|ATL|G|13,5.5,5,2.9,.8,1.8,470,780,1.9
+Jalen Duren|DET|C|18.5,10.5,2.5,.9,1.1,0,640,690,2.2
+Jarrett Allen|CLE|C|14.5,9.5,2,.7,1,0,640,730,1.5
+Rudy Gobert|MIN|C|11,10.5,1.5,.8,1.6,0,670,650,1.5
+Ivica Zubac|IND|C|14,9.5,2,.5,1.3,0,610,730,1.7
+Myles Turner|MIL|C|15,6.5,1.8,.8,1.5,2,520,780,1.3
+Brook Lopez|LAC|C|10,4.5,1.5,.6,1.5,2,470,780,1
+Nic Claxton|BKN|C|11,8.5,2.2,.8,1.5,0,600,520,1.5
+Onyeka Okongwu|ATL|C|13,8,2,1,1.2,.8,610,720,1.4
+Deandre Ayton|LAL|C|14,8.5,1.5,.8,1,.1,570,750,1.6
+Mark Williams|PHX|C|12,8.5,1,.7,1.2,0,620,700,1
+Donovan Clingan|POR|C|11.5,10.5,2,.8,1.7,.3,560,680,1.7
+Ausar Thompson|DET|F|10,7,2.5,1.4,.9,.4,490,530,1.6
+Jalen Suggs|ORL|G|14,3.5,3.5,1.7,.5,2.2,450,780,1.9
+Derrick White|BOS|G|16,4.2,4.5,1,1.1,3.3,450,880,1.5
+Jrue Holiday|POR|G|12,5,4.5,1.2,.5,2,470,830,1.8
+Mikal Bridges|NYK|F|15,3.5,3.5,1,.5,2.4,490,830,1.6
+OG Anunoby|NYK|F|16.5,4.5,2,1.4,.8,2.4,500,780,1.3
+Josh Hart|NYK|G/F|12.5,8.5,4.5,1.5,.4,1.4,500,740,1.6
+Michael Porter Jr.|BKN|F|18,7,1.8,.6,.6,3,490,800,1.3
+Keyonte George|UTA|G|23.5,4.5,7,1,.3,3.2,430,870,3.2
+Lauri Markkanen|UTA|F|24,6.5,2,.9,.5,3.2,480,880,1.7
+Zaccharie Risacher|ATL|F|12,4,1.5,.8,.4,1.8,450,780,1
+CJ McCollum|ATL|G|17,3.5,4,.8,.3,3,450,850,1.8
+Brandon Ingram|TOR|F|21,5,4.5,.8,.5,2.2,460,850,2.5
+Immanuel Quickley|TOR|G|17,3.5,6,1,.2,2.8,440,880,2
+RJ Barrett|TOR|G/F|19,5.5,4,.8,.3,1.8,480,740,2
+Cam Thomas|BKN|G|20.5,3,3.5,.6,.1,2.4,440,860,2.2
+Jabari Smith Jr.|HOU|F|13.5,8,1.7,.9,.9,1.9,470,820,1.2
+Tobias Harris|DET|F|13,5,2.5,.7,.5,1.5,490,830,1.2
+Duncan Robinson|DET|F|12,2.5,2.5,.7,.3,3.2,430,880,1
+Stephon Castle|SAS|G|16.5,5,6.5,1.3,.6,1.4,470,780,2.8
+Devin Vassell|SAS|G|17,4,3.5,1.2,.4,3,440,840,1.7
+Julian Champagnie|SAS|F|11,4,1.5,1,.5,2.7,440,830,.8
+Collin Sexton|CHI|G|17,2.5,3.8,.6,.1,2.5,490,860,1.7
+Josh Giddey|CHI|G|16.5,8.5,7,1,.5,1.8,460,770,3
+Coby White|CHA|G|18,4,4.2,1,.4,3.3,440,850,1.9
+Miles Bridges|CHA|F|19,7,3,1,.6,2.5,450,800,2.1
+Brandon Miller|CHA|F|20,4.5,3.5,.8,.6,3,430,830,2.3
+Kon Knueppel|CHA|G|16,4,2.5,1,.3,3.4,470,880,1.2
+Bennedict Mathurin|IND|G|17,4,2,.7,.3,2.2,450,800,1.9
+Andrew Nembhard|IND|G|14,3,6,1.2,.3,2,490,840,1.7
+Aaron Nesmith|IND|F|14,4,1.5,1,.5,2.5,490,820,1.3
+Norman Powell|MIA|G|20,3,2.5,1,.3,3,470,860,1.7
+Tyler Herro|MIA|G|21,5,5,.9,.3,3.3,455,880,2.5
+Kel'el Ware|MIA|C|11.5,9,1.5,.9,1.3,1.1,540,730,1.2
+Jimmy Butler|GSW|F|18,5.5,5,1.4,.3,1,500,830,1.7
+Draymond Green|GSW|F|8.5,6,5.5,1.3,1,1.1,440,720,2.2
+Brandin Podziemski|GSW|G|13,6,4.5,1,.3,2.1,450,800,1.8
+Paul George|PHI|F|17,5,4,1.3,.4,2.4,430,870,2.3
+VJ Edgecombe|PHI|G|15,5,3.5,1.4,.5,2,430,760,2.3
+Kyrie Irving|DAL|G|24,4.5,5,1.2,.4,3,480,890,2.2
+Klay Thompson|DAL|G|12.5,3.5,2,.6,.4,2.7,420,880,1.1
+Deni Avdija|POR|F|24.5,7,6.5,1,.4,2.9,475,830,3
+Scoot Henderson|POR|G|14,3.5,6,1,.3,1.7,430,800,2.4
+Shaedon Sharpe|POR|G|19,4.5,3.5,.9,.4,2.5,460,830,2.1
+Toumani Camara|POR|F|11,5,2,1.4,.5,1.5,460,780,1.1
+Isaiah Hartenstein|OKC|C|10,10,4.5,1.3,1.1,0,590,740,1.8
+Luguentz Dort|OKC|G|10.5,4,1.8,1,.4,2.2,410,780,1.2
+Alex Caruso|OKC|G|9.5,3.5,3.2,1.6,.8,1.9,430,790,1.1
+Ajay Mitchell|OKC|G|13,3,3.5,1,.3,1.3,500,820,1.6
+Tari Eason|HOU|F|11.5,6.5,1.5,1.4,.9,1.3,450,780,1.3
+Fred VanVleet|HOU|G|14,4,6.5,1.5,.4,2.5,410,830,1.8
+Reed Sheppard|HOU|G|12,3,3,1.4,.4,2.4,470,860,1.3
+Naz Reid|MIN|F/C|14.5,5.5,1.8,.8,.9,2.5,480,800,1.3
+Julius Randle|MIN|F|20,7,4.5,.7,.3,1.8,470,780,2.7
+Jaden McDaniels|MIN|F|12,3.5,2,1.1,.6,1.7,470,780,1.2
+Donte DiVincenzo|MIN|G|10.5,3,3,1,.3,2.5,420,800,1.3
+Dillon Brooks|PHX|F|15,3.5,2,1,.3,2.1,420,810,1.5
+Jalen Green|PHX|G|20,4.5,3.5,.9,.3,3,420,800,2.2
+Collin Gillespie|PHX|G|11,3,4.5,1.2,.2,2.5,440,880,1.3
+Cedric Coward|MEM|F|13,6.5,2.5,1,.5,1.5,480,780,1.4
+Santi Aldama|MEM|F|12,5.5,2.5,.7,.6,2,460,780,1.2
+Zach Edey|MEM|C|10,8,1,.5,1,0,550,640,1.2
+Jerami Grant|POR|F|16,3.5,2.5,.8,.4,2.3,450,810,1.5
+Anfernee Simons|CHI|G|18,3,4,.7,.2,3,420,860,1.8
+Matas Buzelis|CHI|F|14,6,2,.8,1,1.5,470,730,1.6
+Dereck Lively II|DAL|C|10,8.5,1.5,.8,1.4,0,680,590,1.3
+Cason Wallace|OKC|G|11,3.5,2.5,1.4,.5,2,450,830,1
+Tre Johnson|WAS|G|15,3,2.5,.8,.3,2.5,430,850,1.8
+Anthony Black|ORL|G|11,4,4.5,1.2,.5,1.2,460,740,1.7
+Wendell Carter Jr.|ORL|C|11,7.5,2.5,.7,.7,1.4,500,740,1.2
+Dylan Harper|SAS|G|13,4,3.5,1,.4,1.1,470,780,1.9
+Egor Demin|BKN|G|10,4,4.5,.8,.4,2,410,780,1.9
+Ace Bailey|UTA|F|12,4,1.5,.7,.5,1.5,430,780,1.4
+Jaime Jaquez Jr.|MIA|G/F|13.5,4.5,3.5,1,.3,1.3,490,780,1.6`;
 
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>RANK</th>
-                            <th>PLAYER</th>
-                            <th>POS</th>
-                            <th>TEAM</th>
-                            <th>PTS</th>
-                            <th>REB</th>
-                            <th>AST</th>
-                            <th>STL</th>
-                            <th>BLK</th>
-                            <th>FG%</th>
-                            <th>FT%</th>
-                            <th>3PM</th>
-                            <th>TO</th>
-                            <th>ACTION</th>
-                        </tr>
-                    </thead>
-                    <tbody id="playerTableBody">
-                        <!-- Javascript will populate rows here -->
-                    </tbody>
-                </table>
-            </div>
-        </main>
+const PLAYERS=RAW.trim().split('\n').map((l,i)=>{
+  const [name,team,pos,st]=l.split('|'), s=st.split(',').map(Number);
+  return {id:i,name,team,pos,pts:s[0],reb:s[1],ast:s[2],stl:s[3],blk:s[4],tpm:s[5],fg:s[6]/1000,ft:s[7]/1000,to:s[8]};
+});
+const CATS=[['pts','PTS',1],['reb','REB',1],['ast','AST',1],['stl','STL',1],['blk','BLK',1],['tpm','3PM',1],['fg','FG%',1],['ft','FT%',1],['to','TO',-1]];
+const fmt=(k,v)=>(k==='fg'||k==='ft')?v.toFixed(3).replace(/^0/,''):v.toFixed(1);
+// League baseline: mean and spread of every player in the pool, per category
+const BASE={};CATS.forEach(([k])=>{const a=PLAYERS.map(p=>p[k]),m=a.reduce((x,y)=>x+y,0)/a.length;BASE[k]={m,sd:Math.sqrt(a.reduce((x,y)=>x+(y-m)**2,0)/a.length)||1}});
 
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="sidebar-title">Team 1</div>
-                <div class="sidebar-subtitle">9-Cat Live Averages</div>
-            </div>
-            <div class="empty-sidebar-state">
-                No players drafted yet.
-            </div>
-        </aside>
-    </div>
+const N=9,ROUNDS=13,TOTAL=N*ROUNDS,KEY='nbaFantasyDraft9x13.v1';
+const fresh=()=>({names:Array.from({length:N},(_,i)=>'Manager '+(i+1)),order:[...Array(N).keys()],started:false,picks:[]});
+let S=load(),tab=S.started?'draft':'setup',rosterMgr=0,q='',posF='';
 
-    <script>
-        // Array of 10 dummy players
-        const dummyPlayers = [
-            { id: 1, rank: 1, name: "Nikola Jokic", pos: "C", team: "DEN", pts: 26.4, reb: 12.4, ast: 9.0, stl: 1.4, blk: 0.9, fg: 63.2, ft: 82.2, tpm: 1.1, to: 3.0, drafted: false },
-            { id: 2, rank: 2, name: "Luka Doncic", pos: "PG", team: "DAL", pts: 33.9, reb: 9.2, ast: 9.8, stl: 1.4, blk: 0.5, fg: 48.7, ft: 78.6, tpm: 4.1, to: 4.0, drafted: false },
-            { id: 3, rank: 3, name: "Shai Gilgeous-Alexander", pos: "PG", team: "OKC", pts: 30.1, reb: 5.5, ast: 6.2, stl: 2.0, blk: 0.9, fg: 53.5, ft: 87.4, tpm: 1.3, to: 2.2, drafted: false },
-            { id: 4, rank: 4, name: "Victor Wembanyama", pos: "C", team: "SAS", pts: 21.4, reb: 10.6, ast: 3.9, stl: 1.2, blk: 3.6, fg: 46.5, ft: 79.6, tpm: 1.8, to: 3.7, drafted: false },
-            { id: 5, rank: 5, name: "Joel Embiid", pos: "C", team: "PHI", pts: 34.7, reb: 11.0, ast: 5.6, stl: 1.2, blk: 1.7, fg: 52.9, ft: 88.3, tpm: 1.4, to: 3.8, drafted: false },
-            { id: 6, rank: 6, name: "Jayson Tatum", pos: "SF", team: "BOS", pts: 26.9, reb: 8.1, ast: 4.9, stl: 1.0, blk: 0.6, fg: 47.1, ft: 83.3, tpm: 3.1, to: 2.5, drafted: false },
-            { id: 7, rank: 7, name: "Anthony Edwards", pos: "SG", team: "MIN", pts: 25.9, reb: 5.4, ast: 5.1, stl: 1.3, blk: 0.5, fg: 46.1, ft: 83.6, tpm: 2.4, to: 3.1, drafted: false },
-            { id: 8, rank: 8, name: "Giannis Antetokounmpo", pos: "PF", team: "MIL", pts: 30.4, reb: 11.5, ast: 6.5, stl: 1.2, blk: 1.1, fg: 61.1, ft: 65.7, tpm: 0.5, to: 3.4, drafted: false },
-            { id: 9, rank: 9, name: "Tyrese Haliburton", pos: "PG", team: "IND", pts: 20.1, reb: 3.9, ast: 10.9, stl: 1.2, blk: 0.7, fg: 47.7, ft: 85.5, tpm: 2.8, to: 2.3, drafted: false },
-            { id: 10, rank: 10, name: "Kevin Durant", pos: "PF", team: "PHX", pts: 27.1, reb: 6.6, ast: 5.0, stl: 0.9, blk: 1.2, fg: 52.3, ft: 85.6, tpm: 2.2, to: 3.3, drafted: false }
-        ];
+function load(){
+  try{const d=JSON.parse(localStorage.getItem(KEY));
+    if(d&&Array.isArray(d.names)&&d.names.length===N&&Array.isArray(d.order)&&d.order.length===N&&Array.isArray(d.picks))return d;
+  }catch(e){}
+  return fresh();
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const mgrAt=n=>{const r=Math.floor(n/N),p=n%N;return S.order[r%2?N-1-p:p]};
+const drafted=()=>new Set(S.picks.map(p=>p.pid));
+const roster=m=>S.picks.filter(p=>p.mgr===m).map(p=>PLAYERS[p.pid]);
 
-        let currentSearch = "";
-        let currentPos = "ALL";
-        
-        const tableBody = document.getElementById('playerTableBody');
-        const searchInput = document.getElementById('searchInput');
-        const filterBtns = document.querySelectorAll('.filter-btn');
+function draft(pid){
+  if(!S.started||S.picks.length>=TOTAL||drafted().has(pid))return;
+  S.picks.push({pid,mgr:mgrAt(S.picks.length)});
+  save();render();
+}
+function undo(){if(S.picks.length){S.picks.pop();save();render()}}
 
-        function renderTable() {
-            tableBody.innerHTML = '';
+document.getElementById('reset').onclick=()=>{
+  if(confirm('Reset the draft? This clears all picks, manager names and saved data.')){
+    localStorage.removeItem(KEY);S=fresh();tab='setup';rosterMgr=0;q='';posF='';render();
+  }
+};
 
-            const filteredPlayers = dummyPlayers.filter(p => {
-                const matchesSearch = p.name.toLowerCase().includes(currentSearch.toLowerCase());
-                const matchesPos = currentPos === "ALL" || p.pos === currentPos;
-                return matchesSearch && matchesPos;
-            });
+function render(){
+  const nav=document.getElementById('nav');
+  nav.innerHTML=[['draft','Draft Room'],['rosters','Team Rosters'],['board','Draft Board'],['setup','Setup']]
+    .map(([k,l])=>`<button data-t="${k}" class="${tab===k?'on':''}">${l}</button>`).join('');
+  nav.querySelectorAll('button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;render()});
+  const app=document.getElementById('app');
+  ({draft:viewDraft,rosters:viewRosters,board:viewBoard,setup:viewSetup})[tab](app);
+}
 
-            if (filteredPlayers.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="14" style="text-align: center; color: var(--text-muted); padding: 20px;">No players found matching your criteria.</td></tr>`;
-                return;
-            }
+function clockHTML(){
+  const n=S.picks.length;
+  if(!S.started)return `<div class="clock"><div><div class="big">Draft not started</div><div class="mut">Name your managers and set the order in Setup.</div></div></div>`;
+  if(n>=TOTAL)return `<div class="clock"><div class="big">Draft complete</div><div class="mut">All ${TOTAL} picks are in. Check Team Rosters for punting analysis.</div></div>`;
+  const nx=[];for(let i=n+1;i<Math.min(n+6,TOTAL);i++)nx.push(`<span class="chip">#${i+1} ${esc(S.names[mgrAt(i)])}</span>`);
+  return `<div class="clock"><div><div class="mut">On the clock · Round ${Math.floor(n/N)+1} of ${ROUNDS} · Pick ${n+1} of ${TOTAL}</div>
+  <div class="big">${esc(S.names[mgrAt(n)])}</div></div>
+  <div><div class="mut">Picking next</div><div class="next">${nx.join('')||'<span class="mut">Final pick</span>'}</div></div>
+  <button id="undo" ${n?'':'disabled'}>Undo last pick</button></div>`;
+}
 
-            filteredPlayers.forEach(player => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${player.rank}</td>
-                    <td class="col-player">${player.name}</td>
-                    <td class="col-pos">${player.pos}</td>
-                    <td class="col-team">${player.team}</td>
-                    <td>${player.pts.toFixed(1)}</td>
-                    <td>${player.reb.toFixed(1)}</td>
-                    <td>${player.ast.toFixed(1)}</td>
-                    <td>${player.stl.toFixed(1)}</td>
-                    <td>${player.blk.toFixed(1)}</td>
-                    <td>${player.fg.toFixed(1)}</td>
-                    <td>${player.ft.toFixed(1)}</td>
-                    <td>${player.tpm.toFixed(1)}</td>
-                    <td>${player.to.toFixed(1)}</td>
-                    <td><button class="btn-action">DRAFT</button></td>
-                `;
-                tableBody.appendChild(tr);
-            });
-        }
+function viewDraft(app){
+  app.innerHTML=clockHTML()+`<div class="tools"><input id="q" type="search" placeholder="Search players or teams" value="${esc(q)}">
+  <select id="pos"><option value="">All positions</option>${['G','F','C'].map(p=>`<option ${posF===p?'selected':''}>${p}</option>`).join('')}</select>
+  <span class="mut" id="cnt"></span></div><div class="wrap" style="max-height:62vh;overflow:auto"><table><thead><tr><th>Player</th><th class="l">Team</th><th class="l">Pos</th>${CATS.map(c=>`<th>${c[1]}</th>`).join('')}<th></th></tr></thead><tbody id="pool"></tbody></table></div>`;
+  const u=document.getElementById('undo');if(u)u.onclick=undo;
+  document.getElementById('q').oninput=e=>{q=e.target.value;pool()};
+  document.getElementById('pos').onchange=e=>{posF=e.target.value;pool()};
+  pool();
+}
+function pool(){
+  const d=drafted(),t=q.trim().toLowerCase(),can=S.started&&S.picks.length<TOTAL;
+  const list=PLAYERS.filter(p=>!d.has(p.id)&&(!posF||p.pos.includes(posF))&&(!t||(p.name+' '+p.team).toLowerCase().includes(t)));
+  document.getElementById('cnt').textContent=list.length+' available';
+  const tb=document.getElementById('pool');
+  tb.innerHTML=list.length?list.map(p=>`<tr><td>${esc(p.name)}</td><td class="l pos">${p.team}</td><td class="l pos">${p.pos}</td>${CATS.map(c=>`<td>${fmt(c[0],p[c[0]])}</td>`).join('')}<td><button data-id="${p.id}" ${can?'':'disabled'}>Draft</button></td></tr>`).join('')
+    :`<tr><td colspan="13" class="mut">No players match. Clear the search or position filter.</td></tr>`;
+  tb.querySelectorAll('button').forEach(b=>b.onclick=()=>draft(+b.dataset.id));
+}
 
-        // Search listener
-        searchInput.addEventListener('input', (e) => {
-            currentSearch = e.target.value;
-            renderTable();
-        });
+function viewRosters(app){
+  const r=roster(rosterMgr);
+  let h=`<div class="tools"><select id="rm">${S.order.map(m=>`<option value="${m}" ${m===rosterMgr?'selected':''}>${esc(S.names[m])}</option>`).join('')}</select>
+  <span class="mut">${r.length} of ${ROUNDS} players</span></div>`;
+  if(!r.length){h+=`<div class="panel mut">No players yet. Draft players for ${esc(S.names[rosterMgr])} and the punting analysis will appear here.</div>`}
+  else{
+    const avg={},z={};
+    CATS.forEach(([k,,dir])=>{avg[k]=r.reduce((a,p)=>a+p[k],0)/r.length;z[k]=(avg[k]-BASE[k].m)/BASE[k].sd*dir});
+    const rank=CATS.map(c=>c[0]).sort((a,b)=>z[a]-z[b]);
+    const nm=k=>CATS.find(c=>c[0]===k)[1];
+    const low=rank.slice(0,2),hi=rank.slice(-2);
+    h+=`<div class="punt"><b>Recommended Punting Strategy</b><br>Based on your current roster, your best strategy is to punt ${nm(low[0])} and ${nm(low[1])}.
+    <div class="mut" style="font-size:13px;margin-top:4px">Lowest relative categories versus the pool average. Strongest so far: ${nm(hi[1])} and ${nm(hi[0])}.${r.length<4?' Early read: it firms up as you draft more players.':''}</div></div>
+    <div class="cats">${CATS.map(([k,l])=>`<div class="cat ${low.includes(k)?'lo':hi.includes(k)?'hi':''}"><div class="mut">${l}</div><div class="v">${fmt(k,avg[k])}</div><div class="mut" style="font-size:11px">${z[k]>=0?'+':''}${z[k].toFixed(2)} vs pool</div></div>`).join('')}</div>`;
+    h+=`<div class="wrap"><table><thead><tr><th>Player</th><th class="l">Team</th><th class="l">Pos</th>${CATS.map(c=>`<th>${c[1]}</th>`).join('')}</tr></thead><tbody>${r.map(p=>`<tr><td>${esc(p.name)}</td><td class="l pos">${p.team}</td><td class="l pos">${p.pos}</td>${CATS.map(c=>`<td>${fmt(c[0],p[c[0]])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+    <p class="mut">Team averages are simple per-player means (FG% and FT% unweighted). The pool baseline is the average of all ${PLAYERS.length} players; TO counts lower as better.</p>`;
+  }
+  app.innerHTML=h;
+  document.getElementById('rm').onchange=e=>{rosterMgr=+e.target.value;render()};
+}
 
-        // Position Filter listeners
-        filterBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                // Update active class UI
-                filterBtns.forEach(b => b.classList.remove('active'));
-                e.target.classList.add('active');
-                
-                // Update State and re-render
-                currentPos = e.target.getAttribute('data-pos');
-                renderTable();
-            });
-        });
+function viewBoard(app){
+  const cell={};S.picks.forEach((p,i)=>{cell[Math.floor(i/N)+'-'+p.mgr]={n:i+1,p:PLAYERS[p.pid]}});
+  const cur=S.picks.length,cr=Math.floor(cur/N),cm=cur<TOTAL?mgrAt(cur):-1;
+  let h=clockHTML()+`<div class="wrap"><table class="grid"><thead><tr><th>Round</th>${S.order.map(m=>`<th>${esc(S.names[m])}</th>`).join('')}</tr></thead><tbody>`;
+  for(let r=0;r<ROUNDS;r++){
+    h+=`<tr><th>${r+1}<div class="snake">${r%2?'right to left':'left to right'}</div></th>`;
+    S.order.forEach(m=>{
+      const c=cell[r+'-'+m],isCur=S.started&&r===cr&&m===cm;
+      h+=`<td class="${c?'filled':''} ${isCur?'cur':''}">${c?`<div class="pk">Pick ${c.n}</div>${esc(c.p.name)} <span class="pos">${c.p.team} ${c.p.pos}</span>`:isCur?'<span style="color:var(--acc)">On the clock</span>':''}</td>`;
+    });
+    h+='</tr>';
+  }
+  app.innerHTML=h+'</tbody></table></div>';
+  const u=document.getElementById('undo');if(u)u.onclick=undo;
+}
 
-        // Initial render on page load
-        renderTable();
-    </script>
+function viewSetup(app){
+  const locked=S.picks.length>0;
+  app.innerHTML=`<div class="panel"><h2 style="margin-top:0">Managers and draft order</h2>
+  <p class="mut">${locked?'Order is locked once picks are made. You can still rename managers.':'Type each manager name and use the arrows to set the order. Round 1 runs top to bottom, round 2 reverses, and so on.'}</p>
+  ${S.order.map((m,i)=>`<div class="row"><span class="n">Slot ${i+1}</span><input data-m="${m}" value="${esc(S.names[m])}" maxlength="24" aria-label="Manager name for slot ${i+1}">
+  <button data-up="${i}" ${locked||i===0?'disabled':''} aria-label="Move up">&uarr;</button><button data-dn="${i}" ${locked||i===N-1?'disabled':''} aria-label="Move down">&darr;</button></div>`).join('')}
+  <div style="margin-top:14px;display:flex;gap:8px;align-items:center"><button id="go" class="on" style="background:var(--acc);color:#1a1200;font-weight:700;border-color:var(--acc)">${S.started?'Back to draft room':'Start draft'}</button>
+  <span class="mut">${N} managers, ${ROUNDS} rounds, ${TOTAL} picks, ${PLAYERS.length} players in the pool.</span></div></div>`;
+  app.querySelectorAll('input[data-m]').forEach(i=>i.oninput=()=>{S.names[+i.dataset.m]=i.value.trim()||('Manager '+(+i.dataset.m+1));save()});
+  const mv=(i,j)=>{[S.order[i],S.order[j]]=[S.order[j],S.order[i]];save();render()};
+  app.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>mv(+b.dataset.up,+b.dataset.up-1));
+  app.querySelectorAll('[data-dn]').forEach(b=>b.onclick=()=>mv(+b.dataset.dn,+b.dataset.dn+1));
+  document.getElementById('go').onclick=()=>{S.started=true;save();tab='draft';render()};
+}
+render();
+</script>
 </body>
 </html>
