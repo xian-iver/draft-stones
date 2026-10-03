@@ -3,719 +3,433 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Fantasy Basketball Draft Board</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.260.0/lucide.min.js"></script>
+    <title>The Stones Fantasy Draft 2026-2027</title>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --panel-bg: #1e293b;
-            --accent-cyan: #06b6d4;
-            --accent-amber: #f59e0b;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
+            --bg-dark: #0f172a;      /* Very dark navy */
+            --bg-panel: #1e293b;     /* Slightly lighter navy for panels */
+            --bg-input: #0f172a;     /* Input background */
+            --border-color: #334155; /* Muted border */
+            --text-main: #f8fafc;    /* White/gray text */
+            --text-muted: #94a3b8;   /* Muted gray for headers */
+            --accent: #0ea5e9;       /* Cyan/Blue accent */
+            --accent-hover: #0284c7;
+            --row-hover: #1e293b;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            background-color: var(--bg-color);
+            background-color: var(--bg-dark);
             color: var(--text-main);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            height: 100vh;
             display: flex;
             flex-direction: column;
+            height: 100vh;
+            overflow: hidden; /* Prevent full body scroll, handle inside panels */
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background-color: var(--bg-dark);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo-container h1 {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--text-main);
+            letter-spacing: 0.5px;
+        }
+        
+        .logo-container h1 span {
+            color: var(--accent);
+        }
+
+        .draft-info {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .info-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .info-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .info-value.team-name {
+            color: var(--accent);
+        }
+        
+        .info-value.pick-number {
+            color: #fbbf24; /* Yellow for pick */
+        }
+
+        .btn-undo {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-undo:hover {
+            background-color: var(--border-color);
+        }
+
+        .main-layout {
+            display: flex;
+            flex: 1;
             overflow: hidden;
         }
 
-        /* Custom Scrollbar for dark theme */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+            overflow: hidden;
         }
-        ::-webkit-scrollbar-track {
-            background: var(--bg-color);
+
+        .sidebar {
+            width: 350px;
+            background-color: var(--bg-dark);
+            display: flex;
+            flex-direction: column;
         }
-        ::-webkit-scrollbar-thumb {
-            background: #334155;
+
+        .controls-bar {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            gap: 20px;
+        }
+
+        .search-container {
+            flex: 1;
+            max-width: 300px;
+        }
+
+        .search-input {
+            width: 100%;
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 10px 15px;
             border-radius: 4px;
+            outline: none;
+            font-size: 14px;
         }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #475569;
-        }
-
-        /* Glassmorphism effects */
-        .glass-panel {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+        
+        .search-input:focus {
+            border-color: var(--accent);
         }
 
-        /* Animations */
-        @keyframes highlightDraft {
-            0% { background-color: rgba(6, 182, 212, 0.3); }
-            100% { background-color: transparent; }
-        }
-        .just-drafted {
-            animation: highlightDraft 1.5s ease-out forwards;
+        .filters {
+            display: flex;
+            gap: 8px;
         }
 
-        /* Table styling */
+        .filter-btn {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 6px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--text-muted);
+            color: var(--text-main);
+        }
+
+        .filter-btn.active {
+            background-color: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .table-container {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
         th {
             position: sticky;
             top: 0;
-            background: #0f172a;
-            z-index: 10;
-        }
-        
-        .stat-col {
-            font-variant-numeric: tabular-nums;
-            text-align: right;
+            background-color: var(--bg-dark);
+            color: var(--text-muted);
+            font-size: 11px;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
         }
 
-        .action-btn {
-            transition: all 0.2s ease;
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+            white-space: nowrap;
         }
-        .action-btn:hover {
-            transform: translateY(-1px);
+
+        tr:hover td {
+            background-color: var(--row-hover);
         }
-        .action-btn:active {
-            transform: translateY(1px);
+
+        .col-player {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .col-pos, .col-team {
+            color: var(--text-muted);
+        }
+
+        .btn-action {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .btn-action:hover {
+            background-color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        .empty-sidebar-state {
+            padding: 20px;
+            color: var(--text-muted);
+            font-size: 13px;
+            text-align: center;
+            margin-top: 50px;
         }
     </style>
 </head>
 <body>
-
-    <!-- Header -->
-    <header class="h-16 border-b border-slate-700 glass-panel flex items-center justify-between px-6 shrink-0">
-        <div class="flex items-center gap-3">
-            <i data-lucide="trophy" class="text-amber-500 w-6 h-6"></i>
-            <h1 class="text-xl font-bold tracking-tight text-white uppercase">Pro Draft <span class="text-cyan-400">Hub</span></h1>
+    <header class="header">
+        <div class="logo-container">
+            <h1>THE STONES <span>FANTASY DRAFT 2026-2027</span></h1>
         </div>
         
-        <!-- Global Draft Status -->
-        <div class="flex items-center gap-6">
-            <div class="flex flex-col items-end">
-                <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">On The Clock</span>
-                <span id="current-turn-display" class="text-lg font-bold text-cyan-400">Team 1</span>
+        <div class="draft-info">
+            <div class="info-block">
+                <span class="info-label">On The Clock</span>
+                <span class="info-value team-name">Team 1</span>
             </div>
-            <div class="h-8 w-px bg-slate-700"></div>
-            <div class="flex flex-col items-end">
-                <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Round / Pick</span>
-                <span id="round-pick-display" class="text-lg font-bold text-amber-400">1.01</span>
+            
+            <div class="info-block">
+                <span class="info-label">Round / Pick</span>
+                <span class="info-value pick-number">1.01</span>
             </div>
-            <button onclick="undoLastPick()" class="ml-4 flex items-center gap-2 px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-sm font-medium border border-slate-600 transition-colors" title="Undo last pick">
-                <i data-lucide="undo" class="w-4 h-4"></i> Undo
-            </button>
+            
+            <button class="btn-undo">Undo</button>
         </div>
     </header>
 
-    <!-- Main Workspace -->
-    <main class="flex flex-1 overflow-hidden">
-        
-        <!-- Left Panel: Player Pool -->
-        <section class="flex-1 flex flex-col border-r border-slate-700 min-w-[60%] relative">
-            
-            <!-- Filters & Search -->
-            <div class="p-4 glass-panel border-b border-slate-700 flex flex-wrap items-center gap-4 shrink-0 z-20">
-                <div class="relative flex-1 min-w-[200px]">
-                    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
-                    <input type="text" id="search-input" placeholder="Search players..." class="w-full bg-slate-900 border border-slate-700 rounded-md py-2 pl-9 pr-4 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all text-white placeholder-slate-500">
+    <div class="main-layout">
+        <main class="content-area">
+            <div class="controls-bar">
+                <div class="search-container">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search players...">
                 </div>
-                <div class="flex gap-2">
-                    <button class="pos-filter px-3 py-1.5 text-sm rounded-md bg-cyan-600 text-white font-medium hover:bg-cyan-500 transition-colors" data-pos="ALL">ALL</button>
-                    <button class="pos-filter px-3 py-1.5 text-sm rounded-md bg-slate-800 text-slate-300 font-medium hover:bg-slate-700 border border-slate-700 transition-colors" data-pos="PG">PG</button>
-                    <button class="pos-filter px-3 py-1.5 text-sm rounded-md bg-slate-800 text-slate-300 font-medium hover:bg-slate-700 border border-slate-700 transition-colors" data-pos="SG">SG</button>
-                    <button class="pos-filter px-3 py-1.5 text-sm rounded-md bg-slate-800 text-slate-300 font-medium hover:bg-slate-700 border border-slate-700 transition-colors" data-pos="SF">SF</button>
-                    <button class="pos-filter px-3 py-1.5 text-sm rounded-md bg-slate-800 text-slate-300 font-medium hover:bg-slate-700 border border-slate-700 transition-colors" data-pos="PF">PF</button>
-                    <button class="pos-filter px-3 py-1.5 text-sm rounded-md bg-slate-800 text-slate-300 font-medium hover:bg-slate-700 border border-slate-700 transition-colors" data-pos="C">C</button>
+                
+                <div class="filters" id="positionFilters">
+                    <button class="filter-btn active" data-pos="ALL">ALL</button>
+                    <button class="filter-btn" data-pos="PG">PG</button>
+                    <button class="filter-btn" data-pos="SG">SG</button>
+                    <button class="filter-btn" data-pos="SF">SF</button>
+                    <button class="filter-btn" data-pos="PF">PF</button>
+                    <button class="filter-btn" data-pos="C">C</button>
                 </div>
-                <div class="flex items-center gap-2">
-                    <input type="checkbox" id="hide-drafted" class="rounded bg-slate-900 border-slate-700 text-cyan-500 focus:ring-cyan-500 h-4 w-4" checked>
-                    <label for="hide-drafted" class="text-sm text-slate-300 select-none cursor-pointer">Hide Drafted</label>
-                </div>
+                
+                <label class="checkbox-container">
+                    <input type="checkbox" id="hideDrafted"> Hide Drafted
+                </label>
             </div>
 
-            <!-- Player Table -->
-            <div class="flex-1 overflow-auto bg-slate-900 relative">
-                <table class="w-full text-sm text-left border-collapse">
-                    <thead class="text-xs text-slate-400 uppercase bg-[#0f172a] shadow-md border-b border-slate-700">
+            <div class="table-container">
+                <table>
+                    <thead>
                         <tr>
-                            <th class="px-4 py-3 font-semibold cursor-pointer hover:text-white transition-colors" onclick="sortTable('rank')">Rank</th>
-                            <th class="px-4 py-3 font-semibold cursor-pointer hover:text-white transition-colors" onclick="sortTable('name')">Player</th>
-                            <th class="px-2 py-3 font-semibold">Pos</th>
-                            <th class="px-2 py-3 font-semibold">Team</th>
-                            <th class="px-2 py-3 font-semibold stat-col cursor-pointer hover:text-white transition-colors" onclick="sortTable('pts')" title="Points">PTS</th>
-                            <th class="px-2 py-3 font-semibold stat-col cursor-pointer hover:text-white transition-colors" onclick="sortTable('reb')" title="Rebounds">REB</th>
-                            <th class="px-2 py-3 font-semibold stat-col cursor-pointer hover:text-white transition-colors" onclick="sortTable('ast')" title="Assists">AST</th>
-                            <th class="px-2 py-3 font-semibold stat-col cursor-pointer hover:text-white transition-colors" onclick="sortTable('stl')" title="Steals">STL</th>
-                            <th class="px-2 py-3 font-semibold stat-col cursor-pointer hover:text-white transition-colors" onclick="sortTable('blk')" title="Blocks">BLK</th>
-                            <th class="px-2 py-3 font-semibold stat-col cursor-pointer hover:text-white transition-colors" onclick="sortTable('fgp')" title="Field Goal %">FG%</th>
-                            <th class="px-2 py-3 font-semibold stat-col cursor-pointer hover:text-white transition-colors" onclick="sortTable('ftp')" title="Free Throw %">FT%</th>
-                            <th class="px-2 py-3 font-semibold stat-col cursor-pointer hover:text-white transition-colors" onclick="sortTable('tpm')" title="3-Pointers Made">3PM</th>
-                            <th class="px-2 py-3 font-semibold stat-col cursor-pointer hover:text-white transition-colors" onclick="sortTable('to')" title="Turnovers">TO</th>
-                            <th class="px-4 py-3 font-semibold text-center">Action</th>
+                            <th>RANK</th>
+                            <th>PLAYER</th>
+                            <th>POS</th>
+                            <th>TEAM</th>
+                            <th>PTS</th>
+                            <th>REB</th>
+                            <th>AST</th>
+                            <th>STL</th>
+                            <th>BLK</th>
+                            <th>FG%</th>
+                            <th>FT%</th>
+                            <th>3PM</th>
+                            <th>TO</th>
+                            <th>ACTION</th>
                         </tr>
                     </thead>
-                    <tbody id="player-table-body" class="divide-y divide-slate-800/50">
-                        <!-- Rows rendered via JS -->
+                    <tbody id="playerTableBody">
+                        <!-- Javascript will populate rows here -->
                     </tbody>
                 </table>
             </div>
-        </section>
+        </main>
 
-        <!-- Right Panel: Roster & Draft Board -->
-        <section class="w-[40%] min-w-[400px] flex flex-col bg-slate-900 border-l border-slate-700">
-            
-            <!-- Teams Tabs -->
-            <div class="flex overflow-x-auto bg-[#0f172a] border-b border-slate-700 p-2 gap-2 hide-scrollbar shrink-0" id="team-tabs">
-                <!-- Tabs rendered via JS -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">Team 1</div>
+                <div class="sidebar-subtitle">9-Cat Live Averages</div>
             </div>
-
-            <!-- Active Team Roster View -->
-            <div class="flex-1 flex flex-col p-4 overflow-hidden gap-4">
-                
-                <div class="flex justify-between items-end pb-2 border-b border-slate-700 shrink-0">
-                    <div>
-                        <h2 id="roster-title" class="text-xl font-bold text-white mb-1">Team 1</h2>
-                        <p class="text-xs text-slate-400">9-Cat Live Averages</p>
-                    </div>
-                    <!-- Live Stats Banner -->
-                    <div id="roster-averages" class="flex gap-3 text-xs bg-slate-800 px-3 py-2 rounded-lg border border-slate-700 shadow-inner">
-                        <!-- Averages rendered via JS -->
-                    </div>
-                </div>
-
-                <!-- Roster List -->
-                <div class="flex-1 overflow-y-auto pr-2" id="roster-list">
-                    <!-- Roster slots rendered via JS -->
-                </div>
-                
+            <div class="empty-sidebar-state">
+                No players drafted yet.
             </div>
-        </section>
-    </main>
+        </aside>
+    </div>
 
     <script>
-        // Initialize Icons
-        lucide.createIcons();
-
-        // --- 210 Player Dataset (Real 2024-25 Roster Ecosystem with Projections) ---
-        const playersData = [
-            // Atlanta Hawks
-            { id: 1, name: "Trae Young", team: "ATL", pos: "PG", pts: 25.7, reb: 2.8, ast: 10.8, stl: 1.3, blk: 0.2, fgp: 43.0, ftp: 85.5, tpm: 3.2, to: 4.3, bbrefId: "youngtr01" },
-            { id: 2, name: "Jalen Johnson", team: "ATL", pos: "PF", pts: 16.0, reb: 8.7, ast: 3.6, stl: 1.2, blk: 0.8, fgp: 51.1, ftp: 72.8, tpm: 1.3, to: 1.8, bbrefId: "johnsja03" },
-            { id: 3, name: "Bogdan Bogdanovic", team: "ATL", pos: "SG", pts: 16.9, reb: 3.4, ast: 3.1, stl: 1.2, blk: 0.3, fgp: 42.8, ftp: 92.1, tpm: 3.0, to: 1.5, bbrefId: "bogdabo01" },
-            { id: 4, name: "Onyeka Okongwu", team: "ATL", pos: "C", pts: 10.2, reb: 6.8, ast: 1.3, stl: 0.5, blk: 1.1, fgp: 61.1, ftp: 79.3, tpm: 0.2, to: 0.9, bbrefId: "okongon01" },
-            { id: 5, name: "Clint Capela", team: "ATL", pos: "C", pts: 11.5, reb: 10.6, ast: 1.2, stl: 0.6, blk: 1.5, fgp: 57.1, ftp: 63.1, tpm: 0.0, to: 1.0, bbrefId: "capelcl01" },
-            { id: 6, name: "De'Andre Hunter", team: "ATL", pos: "SF", pts: 15.6, reb: 3.9, ast: 1.5, stl: 0.7, blk: 0.3, fgp: 45.9, ftp: 84.7, tpm: 2.0, to: 1.4, bbrefId: "huntede01" },
-            { id: 7, name: "Dyson Daniels", team: "ATL", pos: "PG", pts: 5.8, reb: 3.9, ast: 2.7, stl: 1.4, blk: 0.4, fgp: 44.7, ftp: 64.2, tpm: 0.7, to: 1.1, bbrefId: "daniedy01" },
-            // Boston Celtics
-            { id: 8, name: "Jayson Tatum", team: "BOS", pos: "SF", pts: 26.9, reb: 8.1, ast: 4.9, stl: 1.0, blk: 0.6, fgp: 47.1, ftp: 83.3, tpm: 3.1, to: 2.5, bbrefId: "tatumja01" },
-            { id: 9, name: "Jaylen Brown", team: "BOS", pos: "SG", pts: 23.0, reb: 5.5, ast: 3.6, stl: 1.2, blk: 0.5, fgp: 49.9, ftp: 70.3, tpm: 2.1, to: 2.4, bbrefId: "brownja02" },
-            { id: 10, name: "Derrick White", team: "BOS", pos: "PG", pts: 15.2, reb: 4.2, ast: 5.2, stl: 1.0, blk: 1.2, fgp: 46.1, ftp: 90.1, tpm: 2.7, to: 1.5, bbrefId: "whitede01" },
-            { id: 11, name: "Kristaps Porzingis", team: "BOS", pos: "C", pts: 20.1, reb: 7.2, ast: 2.0, stl: 0.7, blk: 1.9, fgp: 51.6, ftp: 85.8, tpm: 1.9, to: 1.6, bbrefId: "porzikr01" },
-            { id: 12, name: "Jrue Holiday", team: "BOS", pos: "PG", pts: 12.5, reb: 5.4, ast: 4.8, stl: 0.9, blk: 0.8, fgp: 48.0, ftp: 83.3, tpm: 2.0, to: 1.6, bbrefId: "holidjr01" },
-            { id: 13, name: "Al Horford", team: "BOS", pos: "C", pts: 8.6, reb: 6.4, ast: 2.6, stl: 0.6, blk: 1.0, fgp: 51.1, ftp: 86.7, tpm: 1.5, to: 1.0, bbrefId: "horfoal01" },
-            { id: 14, name: "Payton Pritchard", team: "BOS", pos: "PG", pts: 9.6, reb: 3.2, ast: 3.4, stl: 0.5, blk: 0.1, fgp: 46.8, ftp: 82.1, tpm: 1.8, to: 0.7, bbrefId: "pritcpa01" },
-            // Brooklyn Nets
-            { id: 15, name: "Cam Thomas", team: "BKN", pos: "SG", pts: 22.5, reb: 3.2, ast: 2.9, stl: 0.7, blk: 0.2, fgp: 44.2, ftp: 85.6, tpm: 2.2, to: 1.9, bbrefId: "thomaca02" },
-            { id: 16, name: "Nicolas Claxton", team: "BKN", pos: "C", pts: 11.8, reb: 9.9, ast: 2.1, stl: 0.6, blk: 2.1, fgp: 62.9, ftp: 55.1, tpm: 0.0, to: 1.2, bbrefId: "claxtni01" },
-            { id: 17, name: "Cameron Johnson", team: "BKN", pos: "SF", pts: 13.4, reb: 4.3, ast: 2.4, stl: 0.8, blk: 0.3, fgp: 44.6, ftp: 78.9, tpm: 2.4, to: 1.1, bbrefId: "johnsca02" },
-            { id: 18, name: "Dennis Schroder", team: "BKN", pos: "PG", pts: 14.0, reb: 3.0, ast: 6.1, stl: 0.8, blk: 0.2, fgp: 43.5, ftp: 85.2, tpm: 1.5, to: 2.1, bbrefId: "schrode01" },
-            { id: 19, name: "Ben Simmons", team: "BKN", pos: "PG", pts: 6.1, reb: 7.9, ast: 5.7, stl: 0.8, blk: 0.6, fgp: 58.1, ftp: 40.0, tpm: 0.0, to: 2.1, bbrefId: "simmobe01" },
-            { id: 20, name: "Dorian Finney-Smith", team: "BKN", pos: "PF", pts: 8.5, reb: 4.7, ast: 1.6, stl: 0.8, blk: 0.6, fgp: 42.1, ftp: 71.7, tpm: 1.7, to: 0.8, bbrefId: "finnedo01" },
-            { id: 21, name: "Noah Clowney", team: "BKN", pos: "PF", pts: 5.8, reb: 3.5, ast: 0.8, stl: 0.3, blk: 0.7, fgp: 53.8, ftp: 70.0, tpm: 0.5, to: 0.6, bbrefId: "clownno01" },
-            // Charlotte Hornets
-            { id: 22, name: "LaMelo Ball", team: "CHA", pos: "PG", pts: 23.9, reb: 5.1, ast: 8.0, stl: 1.8, blk: 0.2, fgp: 43.3, ftp: 86.5, tpm: 3.2, to: 3.8, bbrefId: "ballla01" },
-            { id: 23, name: "Brandon Miller", team: "CHA", pos: "SF", pts: 17.3, reb: 4.3, ast: 2.4, stl: 0.9, blk: 0.6, fgp: 44.0, ftp: 82.7, tpm: 2.5, to: 1.8, bbrefId: "millebr01" },
-            { id: 24, name: "Miles Bridges", team: "CHA", pos: "PF", pts: 21.0, reb: 7.3, ast: 3.3, stl: 0.9, blk: 0.5, fgp: 46.2, ftp: 82.5, tpm: 2.3, to: 2.0, bbrefId: "bridgmi02" },
-            { id: 25, name: "Mark Williams", team: "CHA", pos: "C", pts: 12.7, reb: 9.7, ast: 1.2, stl: 0.8, blk: 1.1, fgp: 64.9, ftp: 71.9, tpm: 0.0, to: 1.1, bbrefId: "willima04" },
-            { id: 26, name: "Tre Mann", team: "CHA", pos: "PG", pts: 9.3, reb: 3.6, ast: 4.0, stl: 1.2, blk: 0.1, fgp: 43.8, ftp: 76.5, tpm: 1.2, to: 1.6, bbrefId: "manntr01" },
-            { id: 27, name: "Nick Richards", team: "CHA", pos: "C", pts: 9.7, reb: 8.0, ast: 0.8, stl: 0.4, blk: 1.1, fgp: 69.1, ftp: 73.6, tpm: 0.0, to: 1.1, bbrefId: "richani01" },
-            { id: 28, name: "Josh Green", team: "CHA", pos: "SG", pts: 8.2, reb: 3.2, ast: 2.3, stl: 0.8, blk: 0.2, fgp: 47.9, ftp: 68.4, tpm: 1.3, to: 1.1, bbrefId: "greenjo02" },
-            // Chicago Bulls
-            { id: 29, name: "Coby White", team: "CHI", pos: "PG", pts: 19.1, reb: 4.5, ast: 5.1, stl: 0.7, blk: 0.2, fgp: 44.7, ftp: 83.8, tpm: 2.6, to: 2.1, bbrefId: "whiteco01" },
-            { id: 30, name: "Josh Giddey", team: "CHI", pos: "SG", pts: 12.3, reb: 6.4, ast: 4.8, stl: 0.6, blk: 0.6, fgp: 47.5, ftp: 80.6, tpm: 1.0, to: 2.1, bbrefId: "giddejo01" },
-            { id: 31, name: "Zach LaVine", team: "CHI", pos: "SG", pts: 19.5, reb: 5.2, ast: 3.9, stl: 0.8, blk: 0.3, fgp: 45.2, ftp: 85.4, tpm: 2.4, to: 2.1, bbrefId: "lavinza01" },
-            { id: 32, name: "Nikola Vucevic", team: "CHI", pos: "C", pts: 18.0, reb: 10.5, ast: 3.3, stl: 0.7, blk: 0.8, fgp: 48.4, ftp: 82.2, tpm: 1.2, to: 1.7, bbrefId: "vucevni01" },
-            { id: 33, name: "Ayo Dosunmu", team: "CHI", pos: "SG", pts: 12.2, reb: 2.8, ast: 3.2, stl: 0.9, blk: 0.5, fgp: 50.1, ftp: 81.0, tpm: 1.6, to: 1.5, bbrefId: "dosunay01" },
-            { id: 34, name: "Patrick Williams", team: "CHI", pos: "PF", pts: 10.0, reb: 3.9, ast: 1.5, stl: 0.9, blk: 0.8, fgp: 44.3, ftp: 78.8, tpm: 1.4, to: 1.3, bbrefId: "willipa01" },
-            { id: 35, name: "Jalen Smith", team: "CHI", pos: "PF", pts: 9.9, reb: 5.5, ast: 1.0, stl: 0.3, blk: 0.6, fgp: 59.2, ftp: 70.2, tpm: 1.0, to: 1.1, bbrefId: "smithja04" },
-            // Cleveland Cavaliers
-            { id: 36, name: "Donovan Mitchell", team: "CLE", pos: "SG", pts: 26.6, reb: 5.1, ast: 6.1, stl: 1.8, blk: 0.5, fgp: 46.2, ftp: 86.5, tpm: 3.3, to: 2.8, bbrefId: "mitchdo01" },
-            { id: 37, name: "Darius Garland", team: "CLE", pos: "PG", pts: 18.0, reb: 2.7, ast: 6.5, stl: 1.3, blk: 0.1, fgp: 44.6, ftp: 83.4, tpm: 2.3, to: 3.1, bbrefId: "garlada01" },
-            { id: 38, name: "Evan Mobley", team: "CLE", pos: "PF", pts: 15.7, reb: 9.4, ast: 3.2, stl: 0.9, blk: 1.4, fgp: 58.0, ftp: 71.9, tpm: 0.4, to: 1.8, bbrefId: "mobleev01" },
-            { id: 39, name: "Jarrett Allen", team: "CLE", pos: "C", pts: 16.5, reb: 10.5, ast: 2.7, stl: 0.7, blk: 1.1, fgp: 63.4, ftp: 74.2, tpm: 0.0, to: 1.6, bbrefId: "allenja02" },
-            { id: 40, name: "Max Strus", team: "CLE", pos: "SF", pts: 12.2, reb: 4.8, ast: 4.0, stl: 0.9, blk: 0.4, fgp: 41.8, ftp: 79.4, tpm: 2.4, to: 1.4, bbrefId: "strusma01" },
-            { id: 41, name: "Caris LeVert", team: "CLE", pos: "SG", pts: 14.0, reb: 4.1, ast: 5.1, stl: 1.1, blk: 0.5, fgp: 42.1, ftp: 76.6, tpm: 1.6, to: 2.1, bbrefId: "leverca01" },
-            { id: 42, name: "Isaac Okoro", team: "CLE", pos: "SF", pts: 9.4, reb: 3.0, ast: 1.9, stl: 0.8, blk: 0.5, fgp: 49.0, ftp: 70.2, tpm: 1.2, to: 1.0, bbrefId: "okorois01" },
-            // Dallas Mavericks
-            { id: 43, name: "Luka Doncic", team: "DAL", pos: "PG", pts: 33.9, reb: 9.2, ast: 9.8, stl: 1.4, blk: 0.5, fgp: 48.7, ftp: 78.6, tpm: 4.1, to: 4.0, bbrefId: "doncilu01" },
-            { id: 44, name: "Kyrie Irving", team: "DAL", pos: "SG", pts: 25.6, reb: 5.0, ast: 5.2, stl: 1.3, blk: 0.5, fgp: 49.7, ftp: 90.5, tpm: 3.0, to: 1.8, bbrefId: "irvinky01" },
-            { id: 45, name: "Dereck Lively II", team: "DAL", pos: "C", pts: 8.8, reb: 6.9, ast: 1.1, stl: 0.7, blk: 1.4, fgp: 74.7, ftp: 50.6, tpm: 0.0, to: 1.2, bbrefId: "livelde01" },
-            { id: 46, name: "P.J. Washington", team: "DAL", pos: "PF", pts: 12.9, reb: 5.6, ast: 1.9, stl: 1.0, blk: 0.8, fgp: 43.6, ftp: 71.1, tpm: 1.8, to: 1.4, bbrefId: "washipj01" },
-            { id: 47, name: "Daniel Gafford", team: "DAL", pos: "C", pts: 11.0, reb: 7.6, ast: 1.6, stl: 0.9, blk: 2.1, fgp: 72.5, ftp: 69.8, tpm: 0.0, to: 1.0, bbrefId: "gaffoda01" },
-            { id: 48, name: "Klay Thompson", team: "DAL", pos: "SG", pts: 17.9, reb: 3.3, ast: 2.3, stl: 0.6, blk: 0.5, fgp: 43.2, ftp: 92.7, tpm: 3.5, to: 1.5, bbrefId: "thompkl01" },
-            { id: 49, name: "Naji Marshall", team: "DAL", pos: "SF", pts: 7.1, reb: 3.6, ast: 1.9, stl: 0.7, blk: 0.2, fgp: 46.3, ftp: 79.1, tpm: 0.9, to: 1.0, bbrefId: "marshna01" },
-            // Denver Nuggets
-            { id: 50, name: "Nikola Jokic", team: "DEN", pos: "C", pts: 26.4, reb: 12.4, ast: 9.0, stl: 1.4, blk: 0.9, fgp: 58.3, ftp: 81.7, tpm: 1.1, to: 3.0, bbrefId: "jokicni01" },
-            { id: 51, name: "Jamal Murray", team: "DEN", pos: "PG", pts: 21.2, reb: 4.1, ast: 6.5, stl: 1.0, blk: 0.7, fgp: 48.1, ftp: 85.3, tpm: 2.5, to: 2.1, bbrefId: "murraja01" },
-            { id: 52, name: "Michael Porter Jr.", team: "DEN", pos: "SF", pts: 16.7, reb: 7.0, ast: 1.5, stl: 0.5, blk: 0.7, fgp: 48.4, ftp: 83.6, tpm: 2.7, to: 1.2, bbrefId: "portemi01" },
-            { id: 53, name: "Aaron Gordon", team: "DEN", pos: "PF", pts: 13.9, reb: 6.5, ast: 3.5, stl: 0.8, blk: 0.6, fgp: 55.6, ftp: 65.8, tpm: 0.5, to: 1.4, bbrefId: "gordoaa01" },
-            { id: 54, name: "Christian Braun", team: "DEN", pos: "SG", pts: 7.3, reb: 3.7, ast: 1.6, stl: 0.5, blk: 0.4, fgp: 46.0, ftp: 69.4, tpm: 0.8, to: 0.6, bbrefId: "braunch01" },
-            { id: 55, name: "Peyton Watson", team: "DEN", pos: "PF", pts: 6.7, reb: 3.2, ast: 1.1, stl: 0.5, blk: 1.1, fgp: 46.5, ftp: 70.6, tpm: 0.5, to: 0.8, bbrefId: "watsope01" },
-            { id: 56, name: "Russell Westbrook", team: "DEN", pos: "PG", pts: 11.1, reb: 5.0, ast: 4.5, stl: 1.1, blk: 0.3, fgp: 45.4, ftp: 68.8, tpm: 0.6, to: 2.1, bbrefId: "westbru01" },
-            // Detroit Pistons
-            { id: 57, name: "Cade Cunningham", team: "DET", pos: "PG", pts: 22.7, reb: 4.3, ast: 7.5, stl: 0.9, blk: 0.4, fgp: 44.9, ftp: 86.9, tpm: 1.9, to: 3.4, bbrefId: "cunnica01" },
-            { id: 58, name: "Jalen Duren", team: "DET", pos: "C", pts: 13.8, reb: 11.6, ast: 2.4, stl: 0.5, blk: 0.8, fgp: 61.9, ftp: 79.0, tpm: 0.0, to: 2.1, bbrefId: "durenja01" },
-            { id: 59, name: "Jaden Ivey", team: "DET", pos: "SG", pts: 15.4, reb: 3.4, ast: 3.8, stl: 0.7, blk: 0.5, fgp: 42.9, ftp: 74.9, tpm: 1.6, to: 2.2, bbrefId: "iveyja01" },
-            { id: 60, name: "Tobias Harris", team: "DET", pos: "PF", pts: 17.2, reb: 6.5, ast: 3.1, stl: 1.0, blk: 0.7, fgp: 48.7, ftp: 87.8, tpm: 1.3, to: 1.2, bbrefId: "harrito01" },
-            { id: 61, name: "Ausar Thompson", team: "DET", pos: "SF", pts: 8.8, reb: 6.4, ast: 1.9, stl: 1.1, blk: 0.9, fgp: 48.3, ftp: 59.7, tpm: 0.3, to: 1.3, bbrefId: "thompa01" },
-            { id: 62, name: "Isaiah Stewart", team: "DET", pos: "C", pts: 10.9, reb: 6.6, ast: 1.6, stl: 0.4, blk: 0.8, fgp: 48.7, ftp: 75.3, tpm: 1.5, to: 1.4, bbrefId: "stewais01" },
-            { id: 63, name: "Tim Hardaway Jr.", team: "DET", pos: "SG", pts: 14.4, reb: 3.2, ast: 1.8, stl: 0.5, blk: 0.1, fgp: 40.2, ftp: 85.2, tpm: 2.7, to: 1.1, bbrefId: "hardati02" },
-            // Golden State Warriors
-            { id: 64, name: "Stephen Curry", team: "GSW", pos: "PG", pts: 26.4, reb: 4.5, ast: 5.1, stl: 0.7, blk: 0.4, fgp: 45.0, ftp: 92.3, tpm: 4.8, to: 2.8, bbrefId: "curryst01" },
-            { id: 65, name: "Jonathan Kuminga", team: "GSW", pos: "PF", pts: 16.1, reb: 4.8, ast: 2.2, stl: 0.7, blk: 0.5, fgp: 52.9, ftp: 74.6, tpm: 0.7, to: 1.6, bbrefId: "kuminjo01" },
-            { id: 66, name: "Draymond Green", team: "GSW", pos: "PF", pts: 8.6, reb: 7.2, ast: 6.0, stl: 1.0, blk: 0.9, fgp: 49.7, ftp: 73.0, tpm: 1.0, to: 2.0, bbrefId: "greendr01" },
-            { id: 67, name: "Brandin Podziemski", team: "GSW", pos: "SG", pts: 9.2, reb: 5.8, ast: 3.7, stl: 0.8, blk: 0.2, fgp: 45.4, ftp: 63.3, tpm: 1.2, to: 1.2, bbrefId: "podzibr01" },
-            { id: 68, name: "Andrew Wiggins", team: "GSW", pos: "SF", pts: 13.2, reb: 4.5, ast: 1.7, stl: 0.6, blk: 0.6, fgp: 45.3, ftp: 75.1, tpm: 1.2, to: 1.3, bbrefId: "wiggian01" },
-            { id: 69, name: "De'Anthony Melton", team: "GSW", pos: "SG", pts: 11.1, reb: 3.7, ast: 3.0, stl: 1.6, blk: 0.4, fgp: 38.6, ftp: 82.7, tpm: 2.1, to: 1.4, bbrefId: "meltode01" },
-            { id: 70, name: "Buddy Hield", team: "GSW", pos: "SG", pts: 12.1, reb: 3.2, ast: 2.8, stl: 0.8, blk: 0.2, fgp: 43.6, ftp: 88.1, tpm: 2.6, to: 1.6, bbrefId: "hieldbu01" },
-            // Houston Rockets
-            { id: 71, name: "Alperen Sengun", team: "HOU", pos: "C", pts: 21.1, reb: 9.3, ast: 5.0, stl: 1.2, blk: 0.7, fgp: 53.7, ftp: 69.3, tpm: 0.5, to: 2.6, bbrefId: "sengual01" },
-            { id: 72, name: "Jalen Green", team: "HOU", pos: "SG", pts: 19.6, reb: 5.2, ast: 3.5, stl: 0.8, blk: 0.3, fgp: 42.3, ftp: 80.4, tpm: 2.5, to: 2.3, bbrefId: "greenja05" },
-            { id: 73, name: "Fred VanVleet", team: "HOU", pos: "PG", pts: 17.4, reb: 3.8, ast: 8.1, stl: 1.4, blk: 0.8, fgp: 41.6, ftp: 86.0, tpm: 3.1, to: 1.7, bbrefId: "vanvlfr01" },
-            { id: 74, name: "Jabari Smith Jr.", team: "HOU", pos: "PF", pts: 13.7, reb: 8.1, ast: 1.6, stl: 0.7, blk: 0.8, fgp: 45.4, ftp: 81.1, tpm: 1.8, to: 1.2, bbrefId: "smithja05" },
-            { id: 75, name: "Amen Thompson", team: "HOU", pos: "SG", pts: 9.5, reb: 6.6, ast: 2.6, stl: 1.3, blk: 0.6, fgp: 53.6, ftp: 68.4, tpm: 0.1, to: 1.5, bbrefId: "thompam01" },
-            { id: 76, name: "Tari Eason", team: "HOU", pos: "SF", pts: 9.8, reb: 7.0, ast: 1.2, stl: 1.4, blk: 0.9, fgp: 46.6, ftp: 63.6, tpm: 0.9, to: 1.0, bbrefId: "easonta01" },
-            { id: 77, name: "Dillon Brooks", team: "HOU", pos: "SF", pts: 12.7, reb: 3.4, ast: 1.7, stl: 0.9, blk: 0.1, fgp: 42.8, ftp: 84.4, tpm: 1.8, to: 1.3, bbrefId: "brookdi01" },
-            // Indiana Pacers
-            { id: 78, name: "Tyrese Haliburton", team: "IND", pos: "PG", pts: 20.1, reb: 3.9, ast: 10.9, stl: 1.2, blk: 0.7, fgp: 47.7, ftp: 85.5, tpm: 2.8, to: 2.3, bbrefId: "halibty01" },
-            { id: 79, name: "Pascal Siakam", team: "IND", pos: "PF", pts: 21.3, reb: 7.8, ast: 3.7, stl: 0.8, blk: 0.4, fgp: 54.9, ftp: 73.2, tpm: 1.2, to: 1.8, bbrefId: "siakapa01" },
-            { id: 80, name: "Myles Turner", team: "IND", pos: "C", pts: 17.1, reb: 6.9, ast: 1.3, stl: 0.5, blk: 1.9, fgp: 52.4, ftp: 77.3, tpm: 1.5, to: 1.7, bbrefId: "turnemy01" },
-            { id: 81, name: "Andrew Nembhard", team: "IND", pos: "SG", pts: 9.2, reb: 2.1, ast: 4.1, stl: 0.9, blk: 0.1, fgp: 49.8, ftp: 80.4, tpm: 0.9, to: 1.4, bbrefId: "nembhan01" },
-            { id: 82, name: "Bennedict Mathurin", team: "IND", pos: "SG", pts: 14.5, reb: 4.0, ast: 2.0, stl: 0.6, blk: 0.2, fgp: 44.6, ftp: 82.1, tpm: 1.4, to: 1.5, bbrefId: "mathube01" },
-            { id: 83, name: "Aaron Nesmith", team: "IND", pos: "SF", pts: 12.2, reb: 3.8, ast: 1.5, stl: 0.9, blk: 0.7, fgp: 49.6, ftp: 78.1, tpm: 1.9, to: 0.9, bbrefId: "nesmiaa01" },
-            { id: 84, name: "T.J. McConnell", team: "IND", pos: "PG", pts: 10.2, reb: 2.7, ast: 5.5, stl: 1.0, blk: 0.1, fgp: 55.6, ftp: 79.0, tpm: 0.2, to: 1.5, bbrefId: "mccontj01" },
-            // LA Clippers
-            { id: 85, name: "James Harden", team: "LAC", pos: "PG", pts: 16.6, reb: 5.1, ast: 8.5, stl: 1.1, blk: 0.8, fgp: 42.8, ftp: 87.8, tpm: 2.6, to: 2.6, bbrefId: "hardeja01" },
-            { id: 86, name: "Kawhi Leonard", team: "LAC", pos: "SF", pts: 23.7, reb: 6.1, ast: 3.6, stl: 1.6, blk: 0.9, fgp: 52.5, ftp: 88.5, tpm: 2.1, to: 1.8, bbrefId: "leonaka01" },
-            { id: 87, name: "Ivica Zubac", team: "LAC", pos: "C", pts: 11.7, reb: 9.2, ast: 1.4, stl: 0.3, blk: 1.2, fgp: 64.9, ftp: 72.3, tpm: 0.0, to: 1.1, bbrefId: "zubaciv01" },
-            { id: 88, name: "Norman Powell", team: "LAC", pos: "SG", pts: 13.9, reb: 2.6, ast: 1.1, stl: 0.6, blk: 0.3, fgp: 48.6, ftp: 83.1, tpm: 2.2, to: 1.1, bbrefId: "powelno01" },
-            { id: 89, name: "Terance Mann", team: "LAC", pos: "SG", pts: 8.8, reb: 3.4, ast: 1.6, stl: 0.6, blk: 0.2, fgp: 51.5, ftp: 83.2, tpm: 1.0, to: 0.8, bbrefId: "mannte01" },
-            { id: 90, name: "Derrick Jones Jr.", team: "LAC", pos: "SF", pts: 8.6, reb: 3.3, ast: 1.0, stl: 0.7, blk: 0.7, fgp: 48.3, ftp: 71.3, tpm: 1.1, to: 0.8, bbrefId: "jonesde02" },
-            { id: 91, name: "Kevin Porter Jr.", team: "LAC", pos: "PG", pts: 12.0, reb: 3.5, ast: 3.5, stl: 0.8, blk: 0.2, fgp: 44.2, ftp: 78.4, tpm: 1.5, to: 2.0, bbrefId: "porteke02" },
-            // Los Angeles Lakers
-            { id: 92, name: "LeBron James", team: "LAL", pos: "SF", pts: 25.7, reb: 7.3, ast: 8.3, stl: 1.3, blk: 0.5, fgp: 54.0, ftp: 75.0, tpm: 2.1, to: 3.4, bbrefId: "jamesle01" },
-            { id: 93, name: "Anthony Davis", team: "LAL", pos: "C", pts: 24.7, reb: 12.6, ast: 3.5, stl: 1.2, blk: 2.3, fgp: 55.6, ftp: 81.6, tpm: 0.4, to: 2.1, bbrefId: "davisan02" },
-            { id: 94, name: "D'Angelo Russell", team: "LAL", pos: "PG", pts: 18.0, reb: 3.1, ast: 6.3, stl: 0.9, blk: 0.5, fgp: 45.6, ftp: 82.8, tpm: 3.0, to: 2.1, bbrefId: "russeda01" },
-            { id: 95, name: "Austin Reaves", team: "LAL", pos: "SG", pts: 15.9, reb: 4.3, ast: 5.5, stl: 0.8, blk: 0.3, fgp: 48.6, ftp: 85.3, tpm: 1.9, to: 2.1, bbrefId: "reaveau01" },
-            { id: 96, name: "Rui Hachimura", team: "LAL", pos: "PF", pts: 13.6, reb: 4.3, ast: 1.2, stl: 0.6, blk: 0.4, fgp: 53.7, ftp: 73.9, tpm: 1.4, to: 0.8, bbrefId: "hachiru01" },
-            { id: 97, name: "Dalton Knecht", team: "LAL", pos: "SG", pts: 9.5, reb: 2.5, ast: 1.2, stl: 0.5, blk: 0.2, fgp: 44.5, ftp: 82.0, tpm: 1.8, to: 0.9, bbrefId: "knechda01" },
-            { id: 98, name: "Jarred Vanderbilt", team: "LAL", pos: "PF", pts: 5.2, reb: 4.8, ast: 1.2, stl: 1.2, blk: 0.2, fgp: 51.8, ftp: 66.7, tpm: 0.2, to: 0.8, bbrefId: "vandeja01" },
-            // Memphis Grizzlies
-            { id: 99, name: "Ja Morant", team: "MEM", pos: "PG", pts: 25.1, reb: 5.6, ast: 8.1, stl: 1.1, blk: 0.3, fgp: 47.1, ftp: 78.2, tpm: 1.6, to: 3.3, bbrefId: "moranja01" },
-            { id: 100, name: "Desmond Bane", team: "MEM", pos: "SG", pts: 23.7, reb: 4.4, ast: 5.5, stl: 1.0, blk: 0.5, fgp: 46.4, ftp: 87.0, tpm: 3.3, to: 2.5, bbrefId: "banede01" },
-            { id: 101, name: "Jaren Jackson Jr.", team: "MEM", pos: "PF", pts: 22.5, reb: 5.5, ast: 2.3, stl: 1.2, blk: 1.6, fgp: 44.4, ftp: 80.8, tpm: 1.8, to: 2.4, bbrefId: "jacksja02" },
-            { id: 102, name: "Marcus Smart", team: "MEM", pos: "PG", pts: 14.5, reb: 2.7, ast: 4.3, stl: 2.1, blk: 0.3, fgp: 43.0, ftp: 76.8, tpm: 2.1, to: 2.5, bbrefId: "smartma01" },
-            { id: 103, name: "Zach Edey", team: "MEM", pos: "C", pts: 11.5, reb: 7.5, ast: 0.8, stl: 0.3, blk: 1.2, fgp: 60.5, ftp: 70.0, tpm: 0.0, to: 1.5, bbrefId: "edeyza01" },
-            { id: 104, name: "Santi Aldama", team: "MEM", pos: "PF", pts: 10.7, reb: 5.8, ast: 2.3, stl: 0.7, blk: 0.9, fgp: 43.5, ftp: 62.1, tpm: 1.7, to: 1.1, bbrefId: "aldamsa01" },
-            { id: 105, name: "Brandon Clarke", team: "MEM", pos: "PF", pts: 11.3, reb: 5.3, ast: 1.5, stl: 0.8, blk: 1.0, fgp: 60.0, ftp: 74.4, tpm: 0.2, to: 0.8, bbrefId: "clarkbr01" },
-            // Miami Heat
-            { id: 106, name: "Bam Adebayo", team: "MIA", pos: "C", pts: 19.3, reb: 10.4, ast: 3.9, stl: 1.1, blk: 0.9, fgp: 52.1, ftp: 75.5, tpm: 0.2, to: 2.3, bbrefId: "adebaba01" },
-            { id: 107, name: "Jimmy Butler", team: "MIA", pos: "SF", pts: 20.8, reb: 5.3, ast: 5.0, stl: 1.3, blk: 0.3, fgp: 49.9, ftp: 85.8, tpm: 1.0, to: 1.7, bbrefId: "butleji01" },
-            { id: 108, name: "Tyler Herro", team: "MIA", pos: "SG", pts: 20.8, reb: 5.3, ast: 4.5, stl: 0.7, blk: 0.1, fgp: 44.1, ftp: 85.6, tpm: 3.1, to: 2.2, bbrefId: "herroty01" },
-            { id: 109, name: "Terry Rozier", team: "MIA", pos: "PG", pts: 16.4, reb: 4.2, ast: 4.6, stl: 1.0, blk: 0.3, fgp: 42.3, ftp: 87.2, tpm: 2.0, to: 1.5, bbrefId: "roziete01" },
-            { id: 110, name: "Jaime Jaquez Jr.", team: "MIA", pos: "SF", pts: 11.9, reb: 3.8, ast: 2.6, stl: 1.0, blk: 0.3, fgp: 48.9, ftp: 81.1, tpm: 0.9, to: 1.4, bbrefId: "jaqueja01" },
-            { id: 111, name: "Nikola Jovic", team: "MIA", pos: "PF", pts: 7.7, reb: 4.2, ast: 2.0, stl: 0.5, blk: 0.3, fgp: 45.2, ftp: 70.2, tpm: 1.5, to: 1.1, bbrefId: "jovicni01" },
-            { id: 112, name: "Duncan Robinson", team: "MIA", pos: "SG", pts: 12.9, reb: 2.5, ast: 2.8, stl: 0.7, blk: 0.2, fgp: 45.0, ftp: 88.9, tpm: 2.8, to: 1.3, bbrefId: "robindu01" },
-            // Milwaukee Bucks
-            { id: 113, name: "Giannis Antetokounmpo", team: "MIL", pos: "PF", pts: 30.4, reb: 11.5, ast: 6.5, stl: 1.2, blk: 1.1, fgp: 61.1, ftp: 65.7, tpm: 0.5, to: 3.4, bbrefId: "antetgi01" },
-            { id: 114, name: "Damian Lillard", team: "MIL", pos: "PG", pts: 24.3, reb: 4.4, ast: 7.0, stl: 1.0, blk: 0.2, fgp: 42.4, ftp: 92.0, tpm: 3.0, to: 2.6, bbrefId: "lillada01" },
-            { id: 115, name: "Khris Middleton", team: "MIL", pos: "SF", pts: 15.1, reb: 4.7, ast: 5.3, stl: 0.9, blk: 0.3, fgp: 49.3, ftp: 83.3, tpm: 1.7, to: 2.1, bbrefId: "middlkh01" },
-            { id: 116, name: "Bobby Portis", team: "MIL", pos: "PF", pts: 13.8, reb: 7.4, ast: 1.3, stl: 0.8, blk: 0.4, fgp: 50.8, ftp: 79.0, tpm: 1.2, to: 1.2, bbrefId: "portibo01" },
-            { id: 117, name: "Brook Lopez", team: "MIL", pos: "C", pts: 12.5, reb: 5.2, ast: 1.6, stl: 0.5, blk: 2.4, fgp: 48.5, ftp: 82.1, tpm: 1.9, to: 1.0, bbrefId: "lopezbr01" },
-            { id: 118, name: "Gary Trent Jr.", team: "MIL", pos: "SG", pts: 13.7, reb: 2.6, ast: 1.7, stl: 1.1, blk: 0.1, fgp: 42.6, ftp: 77.1, tpm: 2.5, to: 0.7, bbrefId: "trentga02" },
-            { id: 119, name: "Delon Wright", team: "MIL", pos: "PG", pts: 4.5, reb: 1.8, ast: 2.5, stl: 1.1, blk: 0.2, fgp: 39.3, ftp: 80.6, tpm: 0.6, to: 0.6, bbrefId: "wrighde01" },
-            // Minnesota Timberwolves
-            { id: 120, name: "Anthony Edwards", team: "MIN", pos: "SG", pts: 25.9, reb: 5.4, ast: 5.1, stl: 1.3, blk: 0.5, fgp: 46.1, ftp: 83.6, tpm: 2.4, to: 3.1, bbrefId: "edwaran01" },
-            { id: 121, name: "Julius Randle", team: "MIN", pos: "PF", pts: 24.0, reb: 9.2, ast: 5.0, stl: 0.3, blk: 0.3, fgp: 47.2, ftp: 78.1, tpm: 1.7, to: 3.5, bbrefId: "randlju01" },
-            { id: 122, name: "Rudy Gobert", team: "MIN", pos: "C", pts: 14.0, reb: 12.9, ast: 1.3, stl: 0.7, blk: 2.1, fgp: 66.1, ftp: 63.8, tpm: 0.0, to: 1.5, bbrefId: "goberru01" },
-            { id: 123, name: "Naz Reid", team: "MIN", pos: "C", pts: 13.5, reb: 5.2, ast: 1.3, stl: 0.8, blk: 0.9, fgp: 47.7, ftp: 73.6, tpm: 2.1, to: 1.3, bbrefId: "reidna01" },
-            { id: 124, name: "Jaden McDaniels", team: "MIN", pos: "SF", pts: 10.5, reb: 3.1, ast: 1.4, stl: 0.9, blk: 0.6, fgp: 48.9, ftp: 72.2, tpm: 1.2, to: 1.2, bbrefId: "mcdanja02" },
-            { id: 125, name: "Donte DiVincenzo", team: "MIN", pos: "SG", pts: 15.5, reb: 3.7, ast: 2.7, stl: 1.3, blk: 0.4, fgp: 44.3, ftp: 75.4, tpm: 3.5, to: 1.2, bbrefId: "divindo01" },
-            { id: 126, name: "Nickeil Alexander-Walker", team: "MIN", pos: "SG", pts: 8.0, reb: 2.0, ast: 2.5, stl: 0.8, blk: 0.5, fgp: 43.9, ftp: 80.0, tpm: 1.6, to: 1.0, bbrefId: "alexani01" },
-            // New Orleans Pelicans
-            { id: 127, name: "Zion Williamson", team: "NOP", pos: "PF", pts: 22.9, reb: 5.8, ast: 5.0, stl: 1.1, blk: 0.7, fgp: 57.0, ftp: 70.2, tpm: 0.1, to: 2.8, bbrefId: "willizi01" },
-            { id: 128, name: "Brandon Ingram", team: "NOP", pos: "SF", pts: 20.8, reb: 5.1, ast: 5.7, stl: 0.8, blk: 0.6, fgp: 49.2, ftp: 80.1, tpm: 1.3, to: 2.5, bbrefId: "ingrabr01" },
-            { id: 129, name: "CJ McCollum", team: "NOP", pos: "PG", pts: 20.0, reb: 4.3, ast: 4.6, stl: 0.9, blk: 0.6, fgp: 45.9, ftp: 82.7, tpm: 3.6, to: 1.7, bbrefId: "mccolcj01" },
-            { id: 130, name: "Dejounte Murray", team: "NOP", pos: "PG", pts: 22.5, reb: 5.3, ast: 6.4, stl: 1.4, blk: 0.3, fgp: 45.9, ftp: 79.4, tpm: 2.6, to: 2.6, bbrefId: "murrade01" },
-            { id: 131, name: "Trey Murphy III", team: "NOP", pos: "SF", pts: 14.8, reb: 4.9, ast: 2.2, stl: 0.9, blk: 0.5, fgp: 44.3, ftp: 81.5, tpm: 3.0, to: 1.0, bbrefId: "murphtr02" },
-            { id: 132, name: "Herbert Jones", team: "NOP", pos: "SF", pts: 11.0, reb: 3.6, ast: 2.6, stl: 1.4, blk: 0.8, fgp: 49.8, ftp: 86.7, tpm: 1.5, to: 1.1, bbrefId: "joneshe01" },
-            { id: 133, name: "Yves Missi", team: "NOP", pos: "C", pts: 7.5, reb: 6.0, ast: 0.8, stl: 0.5, blk: 1.3, fgp: 62.1, ftp: 60.5, tpm: 0.0, to: 1.0, bbrefId: "missiyv01" },
-            // New York Knicks
-            { id: 134, name: "Jalen Brunson", team: "NYK", pos: "PG", pts: 28.7, reb: 3.6, ast: 6.7, stl: 0.9, blk: 0.2, fgp: 47.9, ftp: 84.7, tpm: 2.7, to: 2.4, bbrefId: "brunsja01" },
-            { id: 135, name: "Karl-Anthony Towns", team: "NYK", pos: "C", pts: 21.8, reb: 8.3, ast: 3.0, stl: 0.7, blk: 0.7, fgp: 50.4, ftp: 87.3, tpm: 2.2, to: 2.6, bbrefId: "townska01" },
-            { id: 136, name: "Mikal Bridges", team: "NYK", pos: "SF", pts: 19.6, reb: 4.5, ast: 3.6, stl: 1.0, blk: 0.4, fgp: 43.6, ftp: 81.4, tpm: 2.7, to: 2.0, bbrefId: "bridgmi01" },
-            { id: 137, name: "OG Anunoby", team: "NYK", pos: "SF", pts: 14.7, reb: 4.2, ast: 2.1, stl: 1.4, blk: 0.7, fgp: 48.9, ftp: 75.3, tpm: 1.9, to: 1.3, bbrefId: "anunoog01" },
-            { id: 138, name: "Josh Hart", team: "NYK", pos: "SG", pts: 9.4, reb: 8.3, ast: 4.1, stl: 0.9, blk: 0.3, fgp: 43.4, ftp: 79.1, tpm: 1.0, to: 1.6, bbrefId: "hartjo01" },
-            { id: 139, name: "Mitchell Robinson", team: "NYK", pos: "C", pts: 5.6, reb: 8.5, ast: 0.6, stl: 1.2, blk: 1.1, fgp: 57.5, ftp: 40.9, tpm: 0.0, to: 0.6, bbrefId: "robinmi01" },
-            { id: 140, name: "Miles McBride", team: "NYK", pos: "PG", pts: 8.3, reb: 1.5, ast: 1.7, stl: 0.9, blk: 0.1, fgp: 45.2, ftp: 86.0, tpm: 1.6, to: 0.5, bbrefId: "mcbrimi01" },
-            // Oklahoma City Thunder
-            { id: 141, name: "Shai Gilgeous-Alexander", team: "OKC", pos: "PG", pts: 30.1, reb: 5.5, ast: 6.2, stl: 2.0, blk: 0.9, fgp: 53.5, ftp: 87.4, tpm: 1.3, to: 2.2, bbrefId: "gilgesh01" },
-            { id: 142, name: "Jalen Williams", team: "OKC", pos: "PF", pts: 19.1, reb: 4.0, ast: 4.5, stl: 1.1, blk: 0.6, fgp: 54.0, ftp: 81.4, tpm: 1.5, to: 1.7, bbrefId: "willija06" },
-            { id: 143, name: "Chet Holmgren", team: "OKC", pos: "C", pts: 16.5, reb: 7.9, ast: 2.4, stl: 0.6, blk: 2.3, fgp: 53.0, ftp: 79.3, tpm: 1.6, to: 1.6, bbrefId: "holmgch01" },
-            { id: 144, name: "Isaiah Hartenstein", team: "OKC", pos: "C", pts: 7.8, reb: 8.3, ast: 2.5, stl: 1.2, blk: 1.1, fgp: 61.9, ftp: 70.7, tpm: 0.0, to: 1.1, bbrefId: "harteis01" },
-            { id: 145, name: "Alex Caruso", team: "OKC", pos: "PG", pts: 10.1, reb: 3.8, ast: 3.5, stl: 1.7, blk: 1.0, fgp: 46.8, ftp: 76.0, tpm: 1.9, to: 1.3, bbrefId: "carusal01" },
-            { id: 146, name: "Luguentz Dort", team: "OKC", pos: "SG", pts: 10.9, reb: 3.6, ast: 1.4, stl: 0.9, blk: 0.6, fgp: 43.8, ftp: 82.6, tpm: 2.0, to: 0.9, bbrefId: "dortlu01" },
-            { id: 147, name: "Cason Wallace", team: "OKC", pos: "PG", pts: 6.8, reb: 2.3, ast: 1.5, stl: 0.9, blk: 0.5, fgp: 49.1, ftp: 78.4, tpm: 1.2, to: 0.5, bbrefId: "wallaca01" },
-            // Orlando Magic
-            { id: 148, name: "Paolo Banchero", team: "ORL", pos: "PF", pts: 22.6, reb: 6.9, ast: 5.4, stl: 0.9, blk: 0.6, fgp: 45.5, ftp: 72.5, tpm: 1.5, to: 3.1, bbrefId: "banchpa01" },
-            { id: 149, name: "Franz Wagner", team: "ORL", pos: "SF", pts: 19.7, reb: 5.3, ast: 3.7, stl: 1.1, blk: 0.4, fgp: 48.2, ftp: 85.0, tpm: 1.4, to: 1.9, bbrefId: "wagnefr01" },
-            { id: 150, name: "Jalen Suggs", team: "ORL", pos: "PG", pts: 12.6, reb: 3.1, ast: 2.7, stl: 1.4, blk: 0.6, fgp: 47.1, ftp: 75.6, tpm: 2.0, to: 1.8, bbrefId: "suggsja01" },
-            { id: 151, name: "Wendell Carter Jr.", team: "ORL", pos: "C", pts: 11.0, reb: 6.9, ast: 1.7, stl: 0.6, blk: 0.5, fgp: 52.5, ftp: 67.4, tpm: 1.2, to: 1.1, bbrefId: "cartewe01" },
-            { id: 152, name: "Kentavious Caldwell-Pope", team: "ORL", pos: "SG", pts: 10.1, reb: 2.4, ast: 2.4, stl: 1.3, blk: 0.5, fgp: 46.0, ftp: 89.4, tpm: 1.6, to: 1.0, bbrefId: "caldwke01" },
-            { id: 153, name: "Jonathan Isaac", team: "ORL", pos: "PF", pts: 6.8, reb: 4.5, ast: 0.5, stl: 0.7, blk: 1.2, fgp: 51.0, ftp: 72.0, tpm: 0.7, to: 0.5, bbrefId: "isaacjo01" },
-            { id: 154, name: "Anthony Black", team: "ORL", pos: "PG", pts: 4.6, reb: 2.0, ast: 1.3, stl: 0.5, blk: 0.3, fgp: 46.6, ftp: 61.3, tpm: 0.5, to: 0.8, bbrefId: "blackan01" },
-            // Philadelphia 76ers
-            { id: 155, name: "Joel Embiid", team: "PHI", pos: "C", pts: 34.7, reb: 11.0, ast: 5.6, stl: 1.2, blk: 1.7, fgp: 52.9, ftp: 88.3, tpm: 1.4, to: 3.8, bbrefId: "embiijo01" },
-            { id: 156, name: "Tyrese Maxey", team: "PHI", pos: "PG", pts: 25.9, reb: 3.7, ast: 6.2, stl: 1.0, blk: 0.5, fgp: 45.0, ftp: 86.8, tpm: 3.0, to: 1.7, bbrefId: "maxeyty01" },
-            { id: 157, name: "Paul George", team: "PHI", pos: "SF", pts: 22.6, reb: 5.2, ast: 3.5, stl: 1.5, blk: 0.5, fgp: 47.1, ftp: 90.7, tpm: 3.3, to: 2.1, bbrefId: "georgpa01" },
-            { id: 158, name: "Kelly Oubre Jr.", team: "PHI", pos: "SF", pts: 15.4, reb: 5.0, ast: 1.5, stl: 1.1, blk: 0.7, fgp: 44.1, ftp: 75.0, tpm: 1.5, to: 1.2, bbrefId: "oubreke01" },
-            { id: 159, name: "Caleb Martin", team: "PHI", pos: "SF", pts: 10.0, reb: 4.4, ast: 2.2, stl: 0.9, blk: 0.5, fgp: 43.1, ftp: 77.8, tpm: 1.2, to: 1.1, bbrefId: "martica01" },
-            { id: 160, name: "Andre Drummond", team: "PHI", pos: "C", pts: 8.4, reb: 9.0, ast: 0.5, stl: 0.9, blk: 0.6, fgp: 55.6, ftp: 59.2, tpm: 0.0, to: 1.1, bbrefId: "drumman01" },
-            { id: 161, name: "Jared McCain", team: "PHI", pos: "PG", pts: 8.5, reb: 2.5, ast: 2.0, stl: 0.7, blk: 0.1, fgp: 42.5, ftp: 85.0, tpm: 1.5, to: 1.0, bbrefId: "mccaija01" },
-            // Phoenix Suns
-            { id: 162, name: "Devin Booker", team: "PHX", pos: "SG", pts: 27.1, reb: 4.5, ast: 6.9, stl: 0.9, blk: 0.4, fgp: 49.2, ftp: 88.6, tpm: 2.2, to: 2.6, bbrefId: "bookede01" },
-            { id: 163, name: "Kevin Durant", team: "PHX", pos: "PF", pts: 27.1, reb: 6.6, ast: 5.0, stl: 0.9, blk: 1.2, fgp: 52.3, ftp: 85.6, tpm: 2.2, to: 3.3, bbrefId: "duranke01" },
-            { id: 164, name: "Bradley Beal", team: "PHX", pos: "SG", pts: 18.2, reb: 4.4, ast: 5.0, stl: 1.0, blk: 0.5, fgp: 51.3, ftp: 81.3, tpm: 1.9, to: 2.5, bbrefId: "bealbr01" },
-            { id: 165, name: "Jusuf Nurkic", team: "PHX", pos: "C", pts: 10.9, reb: 11.0, ast: 4.0, stl: 1.1, blk: 1.1, fgp: 51.0, ftp: 64.0, tpm: 0.4, to: 2.2, bbrefId: "nurkiju01" },
-            { id: 166, name: "Tyus Jones", team: "PHX", pos: "PG", pts: 12.0, reb: 2.7, ast: 7.3, stl: 1.1, blk: 0.3, fgp: 48.9, ftp: 80.0, tpm: 1.6, to: 1.0, bbrefId: "jonesty01" },
-            { id: 167, name: "Grayson Allen", team: "PHX", pos: "SG", pts: 13.5, reb: 3.9, ast: 3.0, stl: 0.9, blk: 0.6, fgp: 49.9, ftp: 87.8, tpm: 2.7, to: 1.3, bbrefId: "allengr01" },
-            { id: 168, name: "Royce O'Neale", team: "PHX", pos: "SF", pts: 7.7, reb: 4.8, ast: 2.8, stl: 0.7, blk: 0.6, fgp: 39.7, ftp: 69.8, tpm: 1.8, to: 0.8, bbrefId: "onealro01" },
-            // Portland Trail Blazers
-            { id: 169, name: "Anfernee Simons", team: "POR", pos: "SG", pts: 22.6, reb: 3.6, ast: 5.5, stl: 0.5, blk: 0.1, fgp: 43.0, ftp: 91.6, tpm: 3.4, to: 2.7, bbrefId: "simonan01" },
-            { id: 170, name: "Jerami Grant", team: "POR", pos: "PF", pts: 21.0, reb: 3.5, ast: 2.8, stl: 0.8, blk: 0.6, fgp: 45.1, ftp: 81.7, tpm: 2.1, to: 2.1, bbrefId: "grantje01" },
-            { id: 171, name: "Deandre Ayton", team: "POR", pos: "C", pts: 16.7, reb: 11.1, ast: 1.6, stl: 1.0, blk: 0.8, fgp: 57.0, ftp: 82.3, tpm: 0.1, to: 1.7, bbrefId: "aytonde01" },
-            { id: 172, name: "Scoot Henderson", team: "POR", pos: "PG", pts: 14.0, reb: 3.1, ast: 5.4, stl: 0.8, blk: 0.2, fgp: 38.5, ftp: 81.9, tpm: 1.4, to: 3.4, bbrefId: "hendesc01" },
-            { id: 173, name: "Deni Avdija", team: "POR", pos: "SF", pts: 14.7, reb: 7.2, ast: 3.8, stl: 0.8, blk: 0.5, fgp: 50.6, ftp: 74.0, tpm: 1.2, to: 2.1, bbrefId: "avdijde01" },
-            { id: 174, name: "Shaedon Sharpe", team: "POR", pos: "SG", pts: 15.9, reb: 5.0, ast: 2.9, stl: 0.9, blk: 0.4, fgp: 40.6, ftp: 82.4, tpm: 1.9, to: 2.4, bbrefId: "sharpsh01" },
-            { id: 175, name: "Donovan Clingan", team: "POR", pos: "C", pts: 8.5, reb: 7.5, ast: 1.2, stl: 0.4, blk: 1.8, fgp: 62.0, ftp: 55.0, tpm: 0.0, to: 1.1, bbrefId: "clingdo01" },
-            // Sacramento Kings
-            { id: 176, name: "De'Aaron Fox", team: "SAC", pos: "PG", pts: 26.6, reb: 4.6, ast: 5.6, stl: 2.0, blk: 0.4, fgp: 46.5, ftp: 73.8, tpm: 2.9, to: 2.6, bbrefId: "foxde01" },
-            { id: 177, name: "Domantas Sabonis", team: "SAC", pos: "C", pts: 19.4, reb: 13.7, ast: 8.2, stl: 0.9, blk: 0.6, fgp: 59.4, ftp: 70.4, tpm: 0.4, to: 3.3, bbrefId: "sabondo01" },
-            { id: 178, name: "DeMar DeRozan", team: "SAC", pos: "SF", pts: 24.0, reb: 4.3, ast: 5.3, stl: 1.1, blk: 0.6, fgp: 48.0, ftp: 85.3, tpm: 0.9, to: 1.7, bbrefId: "derozde01" },
-            { id: 179, name: "Keegan Murray", team: "SAC", pos: "PF", pts: 15.2, reb: 5.5, ast: 1.7, stl: 1.0, blk: 0.8, fgp: 45.4, ftp: 83.1, tpm: 2.4, to: 1.2, bbrefId: "murrake02" },
-            { id: 180, name: "Malik Monk", team: "SAC", pos: "SG", pts: 15.4, reb: 2.9, ast: 5.1, stl: 0.6, blk: 0.5, fgp: 44.3, ftp: 82.9, tpm: 2.1, to: 2.1, bbrefId: "monkma01" },
-            { id: 181, name: "Keon Ellis", team: "SAC", pos: "PG", pts: 5.4, reb: 2.2, ast: 1.5, stl: 0.9, blk: 0.5, fgp: 46.1, ftp: 74.3, tpm: 1.1, to: 0.6, bbrefId: "elliske01" },
-            { id: 182, name: "Kevin Huerter", team: "SAC", pos: "SG", pts: 10.2, reb: 3.5, ast: 2.6, stl: 0.7, blk: 0.4, fgp: 44.3, ftp: 76.6, tpm: 1.9, to: 1.3, bbrefId: "huerteke01" },
-            // San Antonio Spurs
-            { id: 183, name: "Victor Wembanyama", team: "SAS", pos: "C", pts: 21.4, reb: 10.6, ast: 3.9, stl: 1.2, blk: 3.6, fgp: 46.5, ftp: 79.6, tpm: 1.8, to: 3.7, bbrefId: "wembavi01" },
-            { id: 184, name: "Devin Vassell", team: "SAS", pos: "SG", pts: 19.5, reb: 3.8, ast: 4.1, stl: 1.1, blk: 0.3, fgp: 47.2, ftp: 80.1, tpm: 2.4, to: 1.9, bbrefId: "vassede01" },
-            { id: 185, name: "Chris Paul", team: "SAS", pos: "PG", pts: 9.2, reb: 3.9, ast: 6.8, stl: 1.2, blk: 0.1, fgp: 44.1, ftp: 82.7, tpm: 1.3, to: 1.3, bbrefId: "paulch01" },
-            { id: 186, name: "Jeremy Sochan", team: "SAS", pos: "PF", pts: 11.6, reb: 6.4, ast: 3.4, stl: 0.8, blk: 0.5, fgp: 43.8, ftp: 77.1, tpm: 0.9, to: 1.9, bbrefId: "sochaje01" },
-            { id: 187, name: "Keldon Johnson", team: "SAS", pos: "SF", pts: 15.7, reb: 5.5, ast: 2.8, stl: 0.7, blk: 0.3, fgp: 45.4, ftp: 79.2, tpm: 1.8, to: 1.8, bbrefId: "johnske04" },
-            { id: 188, name: "Stephon Castle", team: "SAS", pos: "PG", pts: 10.5, reb: 3.5, ast: 4.0, stl: 1.0, blk: 0.4, fgp: 43.0, ftp: 75.0, tpm: 0.8, to: 1.8, bbrefId: "castlst01" },
-            { id: 189, name: "Tre Jones", team: "SAS", pos: "PG", pts: 10.0, reb: 3.8, ast: 6.2, stl: 1.0, blk: 0.1, fgp: 50.5, ftp: 85.6, tpm: 0.7, to: 1.5, bbrefId: "jonestr01" },
-            // Toronto Raptors
-            { id: 190, name: "Scottie Barnes", team: "TOR", pos: "SF", pts: 19.9, reb: 8.2, ast: 6.1, stl: 1.3, blk: 1.5, fgp: 47.5, ftp: 78.1, tpm: 1.7, to: 2.8, bbrefId: "barnesc01" },
-            { id: 191, name: "Immanuel Quickley", team: "TOR", pos: "PG", pts: 17.0, reb: 3.8, ast: 4.9, stl: 0.7, blk: 0.1, fgp: 43.4, ftp: 85.3, tpm: 2.5, to: 1.7, bbrefId: "quickim01" },
-            { id: 192, name: "RJ Barrett", team: "TOR", pos: "SG", pts: 20.2, reb: 5.4, ast: 3.3, stl: 0.5, blk: 0.4, fgp: 49.5, ftp: 71.5, tpm: 1.5, to: 2.3, bbrefId: "barrerj01" },
-            { id: 193, name: "Jakob Poeltl", team: "TOR", pos: "C", pts: 11.1, reb: 8.6, ast: 2.5, stl: 0.7, blk: 1.5, fgp: 65.6, ftp: 55.1, tpm: 0.0, to: 1.5, bbrefId: "poeltja01" },
-            { id: 194, name: "Gradey Dick", team: "TOR", pos: "SG", pts: 8.5, reb: 2.2, ast: 1.1, stl: 0.6, blk: 0.1, fgp: 42.5, ftp: 86.5, tpm: 1.5, to: 0.8, bbrefId: "dickgr01" },
-            { id: 195, name: "Kelly Olynyk", team: "TOR", pos: "PF", pts: 9.8, reb: 5.3, ast: 4.4, stl: 0.9, blk: 0.4, fgp: 55.5, ftp: 83.3, tpm: 0.8, to: 1.9, bbrefId: "olynyke01" },
-            { id: 196, name: "Ochai Agbaji", team: "TOR", pos: "SG", pts: 5.8, reb: 2.8, ast: 1.1, stl: 0.6, blk: 0.6, fgp: 41.1, ftp: 67.9, tpm: 0.8, to: 0.8, bbrefId: "agbajoc01" },
-            // Utah Jazz
-            { id: 197, name: "Lauri Markkanen", team: "UTA", pos: "PF", pts: 23.2, reb: 8.2, ast: 2.0, stl: 0.9, blk: 0.5, fgp: 48.0, ftp: 89.9, tpm: 3.2, to: 1.4, bbrefId: "markkla01" },
-            { id: 198, name: "Walker Kessler", team: "UTA", pos: "C", pts: 8.1, reb: 7.5, ast: 0.9, stl: 0.5, blk: 2.4, fgp: 65.4, ftp: 60.2, tpm: 0.0, to: 1.0, bbrefId: "kesslwa01" },
-            { id: 199, name: "Collin Sexton", team: "UTA", pos: "SG", pts: 18.7, reb: 2.6, ast: 4.9, stl: 0.8, blk: 0.2, fgp: 48.7, ftp: 85.9, tpm: 1.6, to: 2.1, bbrefId: "sextoco01" },
-            { id: 200, name: "Keyonte George", team: "UTA", pos: "PG", pts: 13.0, reb: 2.8, ast: 4.4, stl: 0.5, blk: 0.1, fgp: 39.1, ftp: 84.8, tpm: 2.0, to: 2.5, bbrefId: "georgke01" },
-            { id: 201, name: "John Collins", team: "UTA", pos: "PF", pts: 15.1, reb: 8.5, ast: 1.1, stl: 0.6, blk: 0.9, fgp: 53.2, ftp: 79.5, tpm: 1.3, to: 1.3, bbrefId: "collijo01" },
-            { id: 202, name: "Jordan Clarkson", team: "UTA", pos: "SG", pts: 17.1, reb: 3.4, ast: 5.0, stl: 0.6, blk: 0.1, fgp: 41.3, ftp: 88.1, tpm: 1.7, to: 2.7, bbrefId: "clarkjo01" },
-            { id: 203, name: "Taylor Hendricks", team: "UTA", pos: "PF", pts: 7.3, reb: 4.6, ast: 0.8, stl: 0.7, blk: 0.8, fgp: 45.0, ftp: 79.3, tpm: 1.3, to: 0.6, bbrefId: "hendrta01" },
-            // Washington Wizards
-            { id: 204, name: "Jordan Poole", team: "WAS", pos: "SG", pts: 17.4, reb: 2.7, ast: 4.4, stl: 1.1, blk: 0.3, fgp: 41.3, ftp: 87.7, tpm: 2.4, to: 2.4, bbrefId: "poolejo01" },
-            { id: 205, name: "Kyle Kuzma", team: "WAS", pos: "PF", pts: 22.2, reb: 6.6, ast: 4.2, stl: 0.5, blk: 0.7, fgp: 46.3, ftp: 77.5, tpm: 2.2, to: 2.7, bbrefId: "kuzmaky01" },
-            { id: 206, name: "Alex Sarr", team: "WAS", pos: "C", pts: 11.5, reb: 7.0, ast: 1.5, stl: 0.8, blk: 1.8, fgp: 48.0, ftp: 71.0, tpm: 0.5, to: 1.4, bbrefId: "sarral01" },
-            { id: 207, name: "Malcolm Brogdon", team: "WAS", pos: "PG", pts: 15.7, reb: 3.8, ast: 5.5, stl: 0.7, blk: 0.2, fgp: 44.0, ftp: 81.2, tpm: 2.1, to: 1.5, bbrefId: "brogdma01" },
-            { id: 208, name: "Bilal Coulibaly", team: "WAS", pos: "SF", pts: 8.4, reb: 4.1, ast: 1.7, stl: 0.9, blk: 0.8, fgp: 43.5, ftp: 70.2, tpm: 1.0, to: 1.4, bbrefId: "coulibi01" },
-            { id: 209, name: "Jonas Valanciunas", team: "WAS", pos: "C", pts: 12.2, reb: 8.8, ast: 2.1, stl: 0.4, blk: 0.8, fgp: 55.9, ftp: 78.5, tpm: 0.5, to: 1.6, bbrefId: "valanjo01" },
-            { id: 210, name: "Corey Kispert", team: "WAS", pos: "SF", pts: 13.4, reb: 2.8, ast: 2.0, stl: 0.5, blk: 0.2, fgp: 48.6, ftp: 82.6, tpm: 2.3, to: 1.0, bbrefId: "kispeco01" }
+        // Array of 10 dummy players
+        const dummyPlayers = [
+            { id: 1, rank: 1, name: "Nikola Jokic", pos: "C", team: "DEN", pts: 26.4, reb: 12.4, ast: 9.0, stl: 1.4, blk: 0.9, fg: 63.2, ft: 82.2, tpm: 1.1, to: 3.0, drafted: false },
+            { id: 2, rank: 2, name: "Luka Doncic", pos: "PG", team: "DAL", pts: 33.9, reb: 9.2, ast: 9.8, stl: 1.4, blk: 0.5, fg: 48.7, ft: 78.6, tpm: 4.1, to: 4.0, drafted: false },
+            { id: 3, rank: 3, name: "Shai Gilgeous-Alexander", pos: "PG", team: "OKC", pts: 30.1, reb: 5.5, ast: 6.2, stl: 2.0, blk: 0.9, fg: 53.5, ft: 87.4, tpm: 1.3, to: 2.2, drafted: false },
+            { id: 4, rank: 4, name: "Victor Wembanyama", pos: "C", team: "SAS", pts: 21.4, reb: 10.6, ast: 3.9, stl: 1.2, blk: 3.6, fg: 46.5, ft: 79.6, tpm: 1.8, to: 3.7, drafted: false },
+            { id: 5, rank: 5, name: "Joel Embiid", pos: "C", team: "PHI", pts: 34.7, reb: 11.0, ast: 5.6, stl: 1.2, blk: 1.7, fg: 52.9, ft: 88.3, tpm: 1.4, to: 3.8, drafted: false },
+            { id: 6, rank: 6, name: "Jayson Tatum", pos: "SF", team: "BOS", pts: 26.9, reb: 8.1, ast: 4.9, stl: 1.0, blk: 0.6, fg: 47.1, ft: 83.3, tpm: 3.1, to: 2.5, drafted: false },
+            { id: 7, rank: 7, name: "Anthony Edwards", pos: "SG", team: "MIN", pts: 25.9, reb: 5.4, ast: 5.1, stl: 1.3, blk: 0.5, fg: 46.1, ft: 83.6, tpm: 2.4, to: 3.1, drafted: false },
+            { id: 8, rank: 8, name: "Giannis Antetokounmpo", pos: "PF", team: "MIL", pts: 30.4, reb: 11.5, ast: 6.5, stl: 1.2, blk: 1.1, fg: 61.1, ft: 65.7, tpm: 0.5, to: 3.4, drafted: false },
+            { id: 9, rank: 9, name: "Tyrese Haliburton", pos: "PG", team: "IND", pts: 20.1, reb: 3.9, ast: 10.9, stl: 1.2, blk: 0.7, fg: 47.7, ft: 85.5, tpm: 2.8, to: 2.3, drafted: false },
+            { id: 10, rank: 10, name: "Kevin Durant", pos: "PF", team: "PHX", pts: 27.1, reb: 6.6, ast: 5.0, stl: 0.9, blk: 1.2, fg: 52.3, ft: 85.6, tpm: 2.2, to: 3.3, drafted: false }
         ];
 
-        // --- App State ---
-        let currentSort = { col: 'rank', asc: true };
-        let draftedPlayers = new Set(); 
-        let draftHistory = []; 
-        let currentTeamTurn = 1;
-        const totalTeams = 12;
-        const totalRounds = 13;
+        let currentSearch = "";
+        let currentPos = "ALL";
         
-        // Initialize Rosters (12 teams, empty arrays)
-        const rosters = {};
-        for(let i=1; i<=totalTeams; i++) {
-            rosters[i] = [];
-        }
-
-        let activeTabTeam = 1;
-
-        // Initialize players with default rank based on dataset order
-        playersData.forEach((p, idx) => p.rank = idx + 1);
-
-        // --- Core Functions ---
-
-        function getDraftInfo() {
-            let totalPicks = draftHistory.length;
-            let currentRound = Math.floor(totalPicks / totalTeams) + 1;
-            let pickInRound = (totalPicks % totalTeams) + 1;
-            
-            // Snake Draft Logic
-            let teamOnClock;
-            if (currentRound % 2 !== 0) {
-                teamOnClock = pickInRound; // Odd round: 1 to 12
-            } else {
-                teamOnClock = totalTeams - pickInRound + 1; // Even round: 12 to 1
-            }
-
-            if (currentRound > totalRounds) {
-                return { round: 'DONE', pick: 'DONE', team: '-' };
-            }
-            return { round: currentRound, pick: pickInRound, team: teamOnClock, totalPick: totalPicks + 1 };
-        }
-
-        function updateDraftHeader() {
-            const info = getDraftInfo();
-            if (info.round === 'DONE') {
-                document.getElementById('current-turn-display').textContent = 'DRAFT COMPLETE';
-                document.getElementById('round-pick-display').textContent = '-';
-            } else {
-                document.getElementById('current-turn-display').textContent = `Team ${info.team}`;
-                document.getElementById('round-pick-display').textContent = `${info.round}.${info.pick.toString().padStart(2, '0')} (${info.totalPick})`;
-                currentTeamTurn = info.team;
-                
-                // Auto-switch tab to team on clock if we just made a pick
-                switchTab(info.team);
-            }
-        }
-
-        function draftPlayer(playerId) {
-            const info = getDraftInfo();
-            if (info.round === 'DONE') return;
-
-            const player = playersData.find(p => p.id === playerId);
-            if (!player || draftedPlayers.has(playerId)) return;
-
-            // Update State
-            draftedPlayers.add(playerId);
-            rosters[info.team].push(player);
-            draftHistory.push({ playerId, team: info.team });
-
-            renderTable();
-            updateDraftHeader();
-            renderRoster(activeTabTeam);
-        }
-
-        function undoLastPick() {
-            if (draftHistory.length === 0) return;
-            const lastPick = draftHistory.pop();
-            draftedPlayers.delete(lastPick.playerId);
-            rosters[lastPick.team] = rosters[lastPick.team].filter(p => p.id !== lastPick.playerId);
-            
-            renderTable();
-            updateDraftHeader();
-            renderRoster(activeTabTeam);
-        }
-
-        // --- UI Rendering ---
-
-        function getFilteredAndSortedPlayers() {
-            const searchQ = document.getElementById('search-input').value.toLowerCase();
-            const hideDrafted = document.getElementById('hide-drafted').checked;
-            const activePosFilter = document.querySelector('.pos-filter.bg-cyan-600').dataset.pos;
-
-            let filtered = playersData.filter(p => {
-                if (hideDrafted && draftedPlayers.has(p.id)) return false;
-                if (searchQ && !p.name.toLowerCase().includes(searchQ) && !p.team.toLowerCase().includes(searchQ)) return false;
-                if (activePosFilter !== 'ALL' && p.pos !== activePosFilter) return false;
-                return true;
-            });
-
-            filtered.sort((a, b) => {
-                let valA = a[currentSort.col];
-                let valB = b[currentSort.col];
-                
-                if (typeof valA === 'string') {
-                    return currentSort.asc ? valA.localeCompare(valB) : valB.localeCompare(valA);
-                }
-                return currentSort.asc ? (valA - valB) : (valB - valA);
-            });
-
-            return filtered;
-        }
+        const tableBody = document.getElementById('playerTableBody');
+        const searchInput = document.getElementById('searchInput');
+        const filterBtns = document.querySelectorAll('.filter-btn');
 
         function renderTable() {
-            const tbody = document.getElementById('player-table-body');
-            const players = getFilteredAndSortedPlayers();
-            
-            tbody.innerHTML = '';
-            
-            players.forEach(p => {
-                const isDrafted = draftedPlayers.has(p.id);
-                const tr = document.createElement('tr');
-                tr.className = `border-b border-slate-800 hover:bg-slate-800/50 transition-colors ${isDrafted ? 'opacity-30 pointer-events-none' : ''}`;
-                
-                // Construct BBRef Link
-                const bbrefUrl = `https://www.basketball-reference.com/players/${p.bbrefId.charAt(0)}/${p.bbrefId}.html`;
+            tableBody.innerHTML = '';
 
-                tr.innerHTML = `
-                    <td class="px-4 py-3 font-medium text-slate-300">${p.rank}</td>
-                    <td class="px-4 py-3">
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-white">${p.name}</span>
-                            <a href="${bbrefUrl}" target="_blank" class="text-slate-500 hover:text-cyan-400" title="View on Basketball Reference">
-                                <i data-lucide="external-link" class="w-3 h-3"></i>
-                            </a>
-                        </div>
-                    </td>
-                    <td class="px-2 py-3"><span class="px-2 py-0.5 rounded text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700">${p.pos}</span></td>
-                    <td class="px-2 py-3 font-medium text-slate-400">${p.team}</td>
-                    <td class="px-2 py-3 stat-col">${p.pts.toFixed(1)}</td>
-                    <td class="px-2 py-3 stat-col">${p.reb.toFixed(1)}</td>
-                    <td class="px-2 py-3 stat-col">${p.ast.toFixed(1)}</td>
-                    <td class="px-2 py-3 stat-col">${p.stl.toFixed(1)}</td>
-                    <td class="px-2 py-3 stat-col">${p.blk.toFixed(1)}</td>
-                    <td class="px-2 py-3 stat-col">${p.fgp.toFixed(1)}</td>
-                    <td class="px-2 py-3 stat-col">${p.ftp.toFixed(1)}</td>
-                    <td class="px-2 py-3 stat-col">${p.tpm.toFixed(1)}</td>
-                    <td class="px-2 py-3 stat-col text-slate-400">${p.to.toFixed(1)}</td>
-                    <td class="px-4 py-3 text-center">
-                        <button onclick="draftPlayer(${p.id})" class="action-btn px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded font-medium text-xs shadow-lg shadow-cyan-900/20">
-                            DRAFT
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
+            const filteredPlayers = dummyPlayers.filter(p => {
+                const matchesSearch = p.name.toLowerCase().includes(currentSearch.toLowerCase());
+                const matchesPos = currentPos === "ALL" || p.pos === currentPos;
+                return matchesSearch && matchesPos;
             });
-            lucide.createIcons();
-        }
 
-        function sortTable(col) {
-            if (currentSort.col === col) {
-                currentSort.asc = !currentSort.asc;
-            } else {
-                currentSort.col = col;
-                // Default sorting direction logic
-                if (['rank', 'name', 'team', 'pos', 'to'].includes(col)) {
-                    currentSort.asc = true; // Lower is better or alphabetical
-                } else {
-                    currentSort.asc = false; // Higher is better for stats
-                }
-            }
-            renderTable();
-        }
-
-        // --- Roster Logic ---
-        function renderTabs() {
-            const tabsContainer = document.getElementById('team-tabs');
-            tabsContainer.innerHTML = '';
-            for(let i=1; i<=totalTeams; i++) {
-                const btn = document.createElement('button');
-                const isActive = i === activeTabTeam;
-                btn.className = `px-4 py-2 rounded-t-lg text-sm font-bold transition-colors whitespace-nowrap border-b-2 ${isActive ? 'bg-slate-800 text-cyan-400 border-cyan-400' : 'text-slate-400 border-transparent hover:text-slate-200 hover:bg-slate-800/50'}`;
-                btn.innerText = `Team ${i}`;
-                btn.onclick = () => switchTab(i);
-                tabsContainer.appendChild(btn);
-            }
-        }
-
-        function switchTab(teamNum) {
-            activeTabTeam = teamNum;
-            renderTabs();
-            renderRoster(teamNum);
-        }
-
-        function renderRoster(teamNum) {
-            document.getElementById('roster-title').textContent = `Team ${teamNum}`;
-            const list = document.getElementById('roster-list');
-            const avgContainer = document.getElementById('roster-averages');
-            const teamRoster = rosters[teamNum];
-            
-            list.innerHTML = '';
-            
-            if (teamRoster.length === 0) {
-                list.innerHTML = `
-                    <div class="h-full flex flex-col items-center justify-center text-slate-500 gap-3 opacity-50">
-                        <i data-lucide="clipboard-list" class="w-12 h-12"></i>
-                        <p>No players drafted yet.</p>
-                    </div>`;
-                avgContainer.innerHTML = `<span class="text-slate-500">No stats yet</span>`;
-                lucide.createIcons();
+            if (filteredPlayers.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="14" style="text-align: center; color: var(--text-muted); padding: 20px;">No players found matching your criteria.</td></tr>`;
                 return;
             }
 
-            // Calculate Averages
-            const sums = teamRoster.reduce((acc, p) => {
-                acc.pts += p.pts; acc.reb += p.reb; acc.ast += p.ast;
-                acc.stl += p.stl; acc.blk += p.blk; acc.tpm += p.tpm; acc.to += p.to;
-                acc.fgp += p.fgp; acc.ftp += p.ftp;
-                return acc;
-            }, {pts:0, reb:0, ast:0, stl:0, blk:0, tpm:0, to:0, fgp:0, ftp:0});
-            
-            const len = teamRoster.length;
-            avgContainer.innerHTML = `
-                <div class="flex flex-col items-center"><span class="text-slate-400">PTS</span><span class="font-bold text-white">${(sums.pts/len).toFixed(1)}</span></div>
-                <div class="flex flex-col items-center"><span class="text-slate-400">REB</span><span class="font-bold text-white">${(sums.reb/len).toFixed(1)}</span></div>
-                <div class="flex flex-col items-center"><span class="text-slate-400">AST</span><span class="font-bold text-white">${(sums.ast/len).toFixed(1)}</span></div>
-                <div class="flex flex-col items-center"><span class="text-slate-400">FG%</span><span class="font-bold text-white">${(sums.fgp/len).toFixed(1)}</span></div>
-            `;
-
-            teamRoster.forEach((p, idx) => {
-                // Check if this player was just drafted (last item in history)
-                const isJustDrafted = draftHistory.length > 0 && draftHistory[draftHistory.length-1].playerId === p.id && teamNum === activeTabTeam;
-                
-                const div = document.createElement('div');
-                div.className = `flex justify-between items-center p-3 rounded-lg border border-slate-700 mb-2 ${isJustDrafted ? 'just-drafted' : 'bg-slate-800/50'}`;
-                
-                div.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <div class="text-xs font-bold text-slate-500 w-4">${idx + 1}.</div>
-                        <div>
-                            <div class="font-bold text-slate-100 flex items-center gap-2">
-                                ${p.name} 
-                                <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-700 text-slate-300 font-semibold uppercase tracking-wider">${p.pos} - ${p.team}</span>
-                            </div>
-                        </div>
-                    </div>
+            filteredPlayers.forEach(player => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${player.rank}</td>
+                    <td class="col-player">${player.name}</td>
+                    <td class="col-pos">${player.pos}</td>
+                    <td class="col-team">${player.team}</td>
+                    <td>${player.pts.toFixed(1)}</td>
+                    <td>${player.reb.toFixed(1)}</td>
+                    <td>${player.ast.toFixed(1)}</td>
+                    <td>${player.stl.toFixed(1)}</td>
+                    <td>${player.blk.toFixed(1)}</td>
+                    <td>${player.fg.toFixed(1)}</td>
+                    <td>${player.ft.toFixed(1)}</td>
+                    <td>${player.tpm.toFixed(1)}</td>
+                    <td>${player.to.toFixed(1)}</td>
+                    <td><button class="btn-action">DRAFT</button></td>
                 `;
-                list.appendChild(div);
+                tableBody.appendChild(tr);
             });
-            
-            lucide.createIcons();
-            // Scroll to bottom
-            list.scrollTop = list.scrollHeight;
         }
 
-        // --- Event Listeners ---
-        document.getElementById('search-input').addEventListener('input', renderTable);
-        document.getElementById('hide-drafted').addEventListener('change', renderTable);
-        
-        document.querySelectorAll('.pos-filter').forEach(btn => {
+        // Search listener
+        searchInput.addEventListener('input', (e) => {
+            currentSearch = e.target.value;
+            renderTable();
+        });
+
+        // Position Filter listeners
+        filterBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
-                document.querySelectorAll('.pos-filter').forEach(b => {
-                    b.className = "pos-filter px-3 py-1.5 text-sm rounded-md bg-slate-800 text-slate-300 font-medium hover:bg-slate-700 border border-slate-700 transition-colors";
-                });
-                e.target.className = "pos-filter px-3 py-1.5 text-sm rounded-md bg-cyan-600 text-white font-medium hover:bg-cyan-500 transition-colors";
+                // Update active class UI
+                filterBtns.forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                
+                // Update State and re-render
+                currentPos = e.target.getAttribute('data-pos');
                 renderTable();
             });
         });
 
-        // Initialize
-        updateDraftHeader();
-        renderTabs();
-        renderRoster(1);
+        // Initial render on page load
         renderTable();
-
     </script>
 </body>
 </html>
