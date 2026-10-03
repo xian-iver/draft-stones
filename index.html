@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The Stones Fantasy Draft Board</title>
+<title>NBA Fantasy Draft Board</title>
 <style>
 :root{--bg:#12151b;--panel:#1b2029;--line:#2b3340;--text:#e8ecf2;--mut:#8b95a5;--acc:#ff9f1c;--good:#4cc9a0;--bad:#ef6461}
 *{box-sizing:border-box}
@@ -50,9 +49,9 @@ tr:hover td{background:#212836}
 </head>
 <body>
 <header>
-  <h1>The Stones 2026-2027 NBA Fantasy Draft Board</h1>
+  <h1>NBA Fantasy Draft Board</h1>
   <nav id="nav"></nav>
-  <button class="reset" id="reset">Reset Draft</button>
+  <span class="mut" id="sync"></span>
 </header>
 <main id="app"></main>
 
@@ -202,6 +201,10 @@ const fmt=(k,v)=>(k==='fg'||k==='ft')?v.toFixed(3).replace(/^0/,''):v.toFixed(1)
 const BASE={};CATS.forEach(([k])=>{const a=PLAYERS.map(p=>p[k]),m=a.reduce((x,y)=>x+y,0)/a.length;BASE[k]={m,sd:Math.sqrt(a.reduce((x,y)=>x+(y-m)**2,0)/a.length)||1}});
 
 const N=9,ROUNDS=13,TOTAL=N*ROUNDS,KEY='nbaFantasyDraft9x13.v1';
+// SHARED SAVING: paste your Firebase Realtime Database URL here, ending in /draft.json
+// e.g. 'https://my-draft-default-rtdb.firebaseio.com/draft.json'. Leave '' for browser-only saving.
+const SYNC_URL='https://nba-draft-3706f-default-rtdb.asia-southeast1.firebasedatabase.app/draft.json';
+const POLL_MS=3000;
 const fresh=()=>({names:Array.from({length:N},(_,i)=>'Manager '+(i+1)),order:[...Array(N).keys()],started:false,picks:[]});
 let S=load(),tab=S.started?'draft':'setup',rosterMgr=0,q='',posF='';
 
@@ -211,24 +214,57 @@ function load(){
   }catch(e){}
   return fresh();
 }
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function localSave(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function save(){localSave();push()}
+const setSync=t=>{const e=document.getElementById('sync');if(e)e.textContent=t};
+function norm(d){
+  if(d&&Array.isArray(d.names)&&d.names.length===N&&Array.isArray(d.order)&&d.order.length===N){d.picks=d.picks||[];return d}
+  return null;
+}
+async function pull(){const r=await fetch(SYNC_URL,{cache:'no-store'});if(!r.ok)throw new Error(r.status);return norm(await r.json())}
+async function push(){
+  if(!SYNC_URL)return;
+  try{const r=await fetch(SYNC_URL,{method:'PUT',body:JSON.stringify(S)});if(!r.ok)throw new Error(r.status);setSync('Shared: live')}
+  catch(e){setSync('Shared: offline, will retry')}
+}
+async function poll(first){
+  if(!SYNC_URL)return;
+  try{
+    const a=document.activeElement;
+    const remote=await pull();
+    setSync('Shared: live');
+    if(!remote){ // shared draft is empty (new or wiped): start everyone fresh
+      S=fresh();localSave();tab='setup';rosterMgr=0;q='';posF='';
+      if(first)await push();
+      render();return;
+    }
+    if(JSON.stringify(remote)===JSON.stringify(S)){if(first){tab=S.started?'draft':'setup';render()}return}
+    if(!first&&a&&a.tagName==='INPUT'&&a.id!=='q')return; // don't overwrite names while someone is typing
+    const keep=a&&a.id==='q'?a.selectionStart:null;
+    S=remote;localSave();
+    if(first)tab=S.started?'draft':'setup';
+    render();
+    if(keep!==null){const el=document.getElementById('q');if(el){el.focus();el.setSelectionRange(keep,keep)}}
+  }catch(e){setSync('Shared: offline, will retry')}
+}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const mgrAt=n=>{const r=Math.floor(n/N),p=n%N;return S.order[r%2?N-1-p:p]};
 const drafted=()=>new Set(S.picks.map(p=>p.pid));
 const roster=m=>S.picks.filter(p=>p.mgr===m).map(p=>PLAYERS[p.pid]);
 
-function draft(pid){
+async function draft(pid){
   if(!S.started||S.picks.length>=TOTAL||drafted().has(pid))return;
+  if(SYNC_URL){ // make sure nobody else picked first
+    try{
+      const r=await pull();
+      if(r&&r.picks.length!==S.picks.length){S=r;localSave();render();setSync('Someone else just picked. Board updated, try again.');return}
+    }catch(e){}
+    if(!S.started||S.picks.length>=TOTAL||drafted().has(pid))return;
+  }
   S.picks.push({pid,mgr:mgrAt(S.picks.length)});
   save();render();
 }
 function undo(){if(S.picks.length){S.picks.pop();save();render()}}
-
-document.getElementById('reset').onclick=()=>{
-  if(confirm('Reset the draft? This clears all picks, manager names and saved data.')){
-    localStorage.removeItem(KEY);S=fresh();tab='setup';rosterMgr=0;q='';posF='';render();
-  }
-};
 
 function render(){
   const nav=document.getElementById('nav');
@@ -321,6 +357,8 @@ function viewSetup(app){
   document.getElementById('go').onclick=()=>{S.started=true;save();tab='draft';render()};
 }
 render();
+setSync(SYNC_URL?'Shared: connecting...':'Saved in this browser only');
+if(SYNC_URL){poll(true);setInterval(()=>poll(false),POLL_MS)}
 </script>
 </body>
 </html>
