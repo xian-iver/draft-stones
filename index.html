@@ -256,7 +256,7 @@ const fmt=(k,v)=>(k==='fg'||k==='ft')?v.toFixed(3).replace(/^0/,''):v.toFixed(1)
 // League baseline: mean and spread of every player in the pool, per category
 const BASE={};CATS.forEach(([k])=>{const a=PLAYERS.map(p=>p[k]),m=a.reduce((x,y)=>x+y,0)/a.length;BASE[k]={m,sd:Math.sqrt(a.reduce((x,y)=>x+(y-m)**2,0)/a.length)||1}});
 
-const N=11,ROUNDS=13,TOTAL=N*ROUNDS,KEY='nbaFantasyDraft9x13.v1';
+const N=10,ROUNDS=13,TOTAL=N*ROUNDS,KEY='nbaFantasyDraft9x13.v1';
 // SHARED SAVING: paste your Firebase Realtime Database URL here, ending in /draft.json
 // e.g. 'https://my-draft-default-rtdb.firebaseio.com/draft.json'. Leave '' for browser-only saving.
 const SYNC_URL='https://nba-draft-3706f-default-rtdb.asia-southeast1.firebasedatabase.app/draft.json';
