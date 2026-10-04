@@ -271,30 +271,48 @@ function load(){
   return fresh();
 }
 function localSave(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-function save(){localSave();push()}
+let ver=0,inflight=0,chain=Promise.resolve(),unsent=false;
+function save(){ver++;localSave();push()}
 const setSync=t=>{const e=document.getElementById('sync');if(e)e.textContent=t};
 function norm(d){
-  if(d&&Array.isArray(d.names)&&d.names.length===N&&Array.isArray(d.order)&&d.order.length===N){d.picks=d.picks||[];return d}
+  if(d&&Array.isArray(d.names)&&d.names.length===N&&Array.isArray(d.order)&&d.order.length===N){d.picks=d.picks||[];d.started=!!d.started;return d}
   return null;
 }
-async function pull(){const r=await fetch(SYNC_URL,{cache:'no-store'});if(!r.ok)throw new Error(r.status);return norm(await r.json())}
-async function push(){
-  if(!SYNC_URL)return;
-  try{const r=await fetch(SYNC_URL,{method:'PUT',body:JSON.stringify(S)});if(!r.ok)throw new Error(r.status);setSync('Shared: live')}
-  catch(e){setSync('Shared: offline, will retry')}
+const canon=x=>JSON.stringify([x.names,x.order,x.started,x.picks]); // key order from the server differs, so compare fields
+async function pullRaw(){const r=await fetch(SYNC_URL,{cache:'no-store'});if(!r.ok)throw new Error(r.status);return r.json()}
+async function pull(){return norm(await pullRaw())}
+function push(){ // writes are queued so the newest state always lands last
+  if(!SYNC_URL)return chain;
+  inflight++;
+  chain=chain.then(async()=>{
+    try{const r=await fetch(SYNC_URL,{method:'PUT',body:JSON.stringify(S)});if(!r.ok)throw new Error(r.status);unsent=false;setSync('Shared: live')}
+    catch(e){unsent=true;setSync('Shared: offline, will retry')}
+    finally{inflight--}
+  });
+  return chain;
 }
 async function poll(first){
   if(!SYNC_URL)return;
+  if(!first&&inflight>0)return;
+  if(!first&&unsent){push();return}
+  const v=ver;
   try{
     const a=document.activeElement;
-    const remote=await pull();
+    const raw=await pullRaw();
+    if(ver!==v||inflight>0)return; // a local change happened meanwhile; this data is stale
     setSync('Shared: live');
-    if(!remote){ // shared draft is empty (new or wiped): start everyone fresh
+    if(raw===null){ // shared draft is empty (new or wiped): start everyone fresh
       S=fresh();localSave();tab='setup';rosterMgr=0;q='';posF='';
       if(first)await push();
       render();return;
     }
-    if(JSON.stringify(remote)===JSON.stringify(S)){if(first){tab=S.started?'draft':'setup';render()}return}
+    const remote=norm(raw);
+    if(!remote){ // saved by a different setup or older page version: never wipe on this
+      if(first){S=fresh();localSave();tab='setup';await push();render()}
+      else setSync('Shared draft is from another version. Refresh this page.');
+      return;
+    }
+    if(canon(remote)===canon(S)){if(first){tab=S.started?'draft':'setup';render()}return}
     if(!first&&a&&a.tagName==='INPUT'&&a.id!=='q')return; // don't overwrite names while someone is typing
     const keep=a&&a.id==='q'?a.selectionStart:null;
     S=remote;localSave();
