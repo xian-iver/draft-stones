@@ -257,9 +257,9 @@ const fmt=(k,v)=>(k==='fg'||k==='ft')?v.toFixed(3).replace(/^0/,''):v.toFixed(1)
 const BASE={};CATS.forEach(([k])=>{const a=PLAYERS.map(p=>p[k]),m=a.reduce((x,y)=>x+y,0)/a.length;BASE[k]={m,sd:Math.sqrt(a.reduce((x,y)=>x+(y-m)**2,0)/a.length)||1}});
 
 const N=10,ROUNDS=13,TOTAL=N*ROUNDS,KEY='nbaFantasyDraft9x13.v1';
-// SHARED SAVING: paste your Firebase Realtime Database URL here, ending in /draft.json
-// e.g. 'https://my-draft-default-rtdb.firebaseio.com/draft.json'. Leave '' for browser-only saving.
-const SYNC_URL='https://nba-draft-3706f-default-rtdb.asia-southeast1.firebasedatabase.app/draft.json';
+// SHARED SAVING: Firebase Realtime Database URL. It has its own path so older cached copies of this page
+// (which use /draft.json) can never overwrite this draft. Leave '' for browser-only saving.
+const SYNC_URL='https://nba-draft-3706f-default-rtdb.asia-southeast1.firebasedatabase.app/drafts/stones-2026-10teams.json';
 const POLL_MS=3000;
 const fresh=()=>({names:Array.from({length:N},(_,i)=>'Manager '+(i+1)),order:[...Array(N).keys()],started:false,picks:[]});
 let S=load(),tab=S.started?'draft':'setup',rosterMgr=0,q='',posF='';
@@ -278,6 +278,7 @@ function norm(d){
   if(d&&Array.isArray(d.names)&&d.names.length===N&&Array.isArray(d.order)&&d.order.length===N){d.picks=d.picks||[];d.started=!!d.started;return d}
   return null;
 }
+const syncErr=e=>/^40[13]$/.test(e&&e.message)?'Shared: blocked by database rules':'Shared: offline, will retry';
 const canon=x=>JSON.stringify([x.names,x.order,x.started,x.picks]); // key order from the server differs, so compare fields
 async function pullRaw(){const r=await fetch(SYNC_URL,{cache:'no-store'});if(!r.ok)throw new Error(r.status);return r.json()}
 async function pull(){return norm(await pullRaw())}
@@ -286,7 +287,7 @@ function push(){ // writes are queued so the newest state always lands last
   inflight++;
   chain=chain.then(async()=>{
     try{const r=await fetch(SYNC_URL,{method:'PUT',body:JSON.stringify(S)});if(!r.ok)throw new Error(r.status);unsent=false;setSync('Shared: live')}
-    catch(e){unsent=true;setSync('Shared: offline, will retry')}
+    catch(e){unsent=true;setSync(syncErr(e))}
     finally{inflight--}
   });
   return chain;
@@ -319,7 +320,7 @@ async function poll(first){
     if(first)tab=S.started?'draft':'setup';
     render();
     if(keep!==null){const el=document.getElementById('q');if(el){el.focus();el.setSelectionRange(keep,keep)}}
-  }catch(e){setSync('Shared: offline, will retry')}
+  }catch(e){setSync(syncErr(e))}
 }
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const mgrAt=n=>{const r=Math.floor(n/N),p=n%N;return S.order[r%2?N-1-p:p]};
